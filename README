@@ -1,0 +1,12 @@
+Tetris (because every language needs one)
+
+Just a tetris game. There's no timer, so blocks don't drop
+automatically. (So it's a pretty easy game.) Best results if you
+prepare your terminal with "stty raw -echo".
+
+Keys:
+ j - move left
+ k - drop
+ l - move right
+ i - rotate
+ esc - quit
