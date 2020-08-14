@@ -1,12 +1,16 @@
 // Copyright 2020 Andrew Archibald. Licensed under the MIT License.
 
-// tetrisrun is a runner for Peter De Wachter's Whitespace Tetris game.
+// tetrisrun is a driver for Peter De Wachter's Whitespace Tetris game.
 // It introduces gravity and provides several key mappings.
 //
-// Running:
+// For better results, disable input processing and turn off echo back
+// with stty, then run tetris.ws with tetrisrun piped into it.
+//
+// For example:
 //
 //     nebula-compile tetris.ws tetris
-//     stty raw -echo && go run tetrisrun/tetrisrun.go | ./tetris
+//     go build -o tetrisrun/tetrisrun tetrisrun/tetrisrun.go
+//     stty raw -echo && tetrisrun/tetrisrun | ./tetris
 //
 // Controls:
 //
