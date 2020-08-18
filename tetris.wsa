@@ -1,0 +1,612 @@
+    push 1  ; 0
+    push 0  ; 1
+    push 1  ; 2
+    push 11 ; 3
+    push 12 ; 4
+    push 0  ; 5
+    push 2  ; 6
+    push 11 ; 7
+    push 12 ; 8
+    push 13 ; 9
+    push 14 ; 10
+    push 7  ; 11
+    push 3  ; 12
+    push 0  ; 13
+    push 1  ; 14
+    push 2  ; 15
+    push 13 ; 16
+    push 8  ; 17
+    push 4  ; 18
+    push 0  ; 19
+    push 1  ; 20
+    push 2  ; 21
+    push 11 ; 22
+    push 11 ; 23
+    push 5  ; 24
+    push 0  ; 25
+    push 1  ; 26
+    push 2  ; 27
+    push 12 ; 28
+    push 14 ; 29
+    push 6  ; 30
+    push 0  ; 31
+    push 1  ; 32
+    push 12 ; 33
+    push 13 ; 34
+    push 17 ; 35
+    push 7  ; 36
+    push 1  ; 37
+    push 2  ; 38
+    push 11 ; 39
+    push 12 ; 40
+    push 18 ; 41
+    push 2  ; 42
+    push 1  ; 43
+    push 12 ; 44
+    push 23 ; 45
+    push 34 ; 46
+    push 1  ; 47
+    push 3  ; 48
+    push 1  ; 49
+    push 12 ; 50
+    push 22 ; 51
+    push 23 ; 52
+    push 9  ; 53
+    push 3  ; 54
+    push 0  ; 55
+    push 11 ; 56
+    push 12 ; 57
+    push 13 ; 58
+    push 10 ; 59
+    push 3  ; 60
+    push 0  ; 61
+    push 1  ; 62
+    push 11 ; 63
+    push 22 ; 64
+    push 2  ; 65
+    push 4  ; 66
+    push 0  ; 67
+    push 1  ; 68
+    push 12 ; 69
+    push 23 ; 70
+    push 12 ; 71
+    push 4  ; 72
+    push 2  ; 73
+    push 11 ; 74
+    push 12 ; 75
+    push 13 ; 76
+    push 13 ; 77
+    push 4  ; 78
+    push 0  ; 79
+    push 11 ; 80
+    push 22 ; 81
+    push 23 ; 82
+    push 3  ; 83
+    push 5  ; 84
+    push 1  ; 85
+    push 11 ; 86
+    push 12 ; 87
+    push 23 ; 88
+    push 15 ; 89
+    push 5  ; 90
+    push 1  ; 91
+    push 11 ; 92
+    push 12 ; 93
+    push 13 ; 94
+    push 16 ; 95
+    push 5  ; 96
+    push 0  ; 97
+    push 11 ; 98
+    push 12 ; 99
+    push 22 ; 100
+    push 4  ; 101
+    push 6  ; 102
+    push 1  ; 103
+    push 11 ; 104
+    push 12 ; 105
+    push 22 ; 106
+    push 5  ; 107
+    push 7  ; 108
+    push 0  ; 109
+    push 11 ; 110
+    push 12 ; 111
+    push 23 ; 112
+    push 6  ; 113
+
+    push 113 ; loop counter
+; Store values at addresses 0-113
+init_loop:
+    swap
+    copy 1
+    swap
+    store
+    push 1 sub
+    dup jn init_done
+    jmp init_loop
+init_done:
+    drop
+
+    push 360 push 123456 store
+    push 121
+label_2:
+    dup push -2  store
+    dup push 341 sub   jz label_3
+label_4:
+    push 1 add
+    dup push 0   store
+    dup push 11  mod   jz label_2
+    jmp label_4
+label_3:
+    push 1 add
+    dup push -2  store
+    dup push 352 sub   jn label_3
+    drop
+    call label_5
+label_6:
+    push 5
+    call label_7
+    call label_8 jn label_9
+    call label_10
+label_11:
+    call cursor_21_24
+    push 361 readc
+    call label_13
+    copy 1
+    copy 1
+    push 361 retrieve  push 106 sub jz label_14
+    push 361 retrieve  push 107 sub jz label_15
+    push 361 retrieve  push 108 sub jz label_16
+    push 361 retrieve  push 105 sub jz label_17
+    push 361 retrieve  push 27  sub jz label_18
+    jmp label_19
+label_14:
+    swap
+    push 1 sub
+    swap
+    jmp label_20
+label_15:
+    swap
+    push 11
+    add
+    swap
+    jmp label_21
+label_16:
+    swap
+    push 1
+    add
+    swap
+    jmp label_20
+label_17:
+    push 5
+    add
+    retrieve
+    push 6
+    mul
+    jmp label_20
+label_18:
+    drop
+    drop
+    jmp label_9
+label_20:
+    call label_8 jn label_19
+    jmp label_22
+label_21:
+    call label_8 jn label_23
+    jmp label_22
+label_22:
+    call label_10
+    push 362
+    swap
+    store
+    push 363
+    swap
+    store
+    drop
+    drop
+    push 363
+    retrieve
+    push 362
+    retrieve
+    call label_10
+    jmp label_11
+label_19:
+    drop
+    drop
+    call label_10
+    jmp label_11
+label_23:
+    drop
+    drop
+    call label_10
+    drop
+    drop
+    call label_24
+    jmp label_6
+label_9:
+    call label_10
+    drop
+    drop
+    call cursor_21_24
+    call reverse
+    push ' '   printc
+    push '\n'  printc
+    push '\e'  printc
+    push '['   printc
+    push 'G'   printc
+    call reset
+    end
+label_7:
+    push 360
+    retrieve
+    push 279470273
+    mul
+    push 4294967291
+    mod
+    dup
+    push 360
+    swap
+    store
+    push 7
+    mod
+    push 6
+    mul
+    ret
+
+label_24:
+    push 341
+label_27:
+    push 11  div
+    push 11  mul
+    push 1   sub
+    dup
+    push 122 sub
+    jn label_28
+label_29:
+    dup
+    retrieve
+    jz label_27
+    push 1   sub
+    dup
+    push 11  mod
+    jz label_30
+    jmp label_29
+label_30:
+    dup
+    push 11  div
+    push 10  sub
+    call label_31
+    dup
+    call label_32
+    push 11  add
+    jmp label_27
+label_28:
+    drop
+    ret
+
+label_32:
+    dup
+    dup
+    retrieve
+    swap
+    push 11  add
+    swap
+    store
+    dup
+    push 122 sub
+    jz label_33
+    push 1   sub
+    jmp label_32
+label_33:
+    dup
+    push 0
+    store
+    push 1   add
+    dup
+    push 11  mod
+    jz label_34
+    jmp label_33
+label_34:
+    drop
+    ret
+
+label_8:
+    copy 1
+    copy 1
+    swap
+    push 121 add
+    swap
+    push 1 add
+    dup retrieve  copy 2  add    retrieve jn neg
+    push 1 add
+    dup retrieve  copy 2  add    retrieve jn neg
+    push 1 add
+    dup retrieve  copy 2  add    retrieve jn neg
+    push 1 add
+    dup retrieve  copy 2  add    retrieve jn neg
+    drop
+    drop
+    push 0
+    ret
+neg:
+    drop
+    drop
+    push -1
+    ret
+
+label_10:
+    call label_36
+    swap
+    push 121 add
+    swap
+    push 1 add
+    dup
+    retrieve
+    copy 2 add
+    push -1
+    store
+    push 1 add
+    dup
+    retrieve
+    copy 2 add
+    push -1
+    store
+    push 1 add
+    dup
+    retrieve
+    copy 2
+    add
+    push -1
+    store
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    push -1
+    store
+    push 4
+    sub
+    swap
+    push 121
+    sub
+    swap
+    ret
+
+label_13:
+    call label_37
+    swap
+    push 121
+    add
+    swap
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    push 0
+    store
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    push 0
+    store
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    push 0
+    store
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    push 0
+    store
+    push 4
+    sub
+    swap
+    push 121
+    sub
+    swap
+    ret
+
+label_36:
+    dup
+    retrieve
+    call background
+    jmp label_39
+label_37:
+    push 0
+    call background
+label_39:
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    call label_40
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    call label_40
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    call label_40
+    push 1
+    add
+    dup
+    retrieve
+    copy 2
+    add
+    call label_40
+    push 4
+    sub
+    ret
+
+label_40:
+    dup
+    push '\e' printc
+    push '['  printc
+    push 11   div
+    push 1    add
+    printi
+    push ';'  printc
+    push 11   mod
+    push 2    mul
+    push 1    add
+    printi
+    push 'H'  printc
+    push '\e' printc
+    push '['  printc
+    push '2'  printc
+    push 'X'  printc
+    push ' '  printc
+    push ' '  printc
+    ret
+
+label_31:
+    call reset
+    push '\e' printc
+    push '['  printc
+    printi
+    push 'H'  printc
+    push '\e' printc
+    push '['  printc
+    push '1'  printc
+    push 'M'  printc
+    jmp label_41
+
+label_5:
+    push '\e' printc
+    push '['  printc
+    push '2'  printc
+    push 'J'  printc
+    push '\e' printc
+    push '['  printc
+    push 'H'  printc
+    call reverse
+    push 23
+    call print_spaces
+    push -20
+label_43:
+    call label_41
+    push 1
+    add
+    dup
+    jn label_43
+    drop
+    ret
+
+label_41:
+    call reset
+    ; Move cursor home.
+    push '\e' printc
+    push '['  printc
+    push 'H'  printc
+    push '\e' printc
+    push '['  printc
+    push 'L'  printc
+    call reverse
+    push ' '  printc
+    push ' '  printc
+    push '\e' printc
+    push '['  printc
+    push '2'  printc
+    push '3'  printc
+    push 'G'  printc
+    push ' '  printc
+    push ' '  printc
+    ret
+
+; Move cursor to line 21, col 24.
+cursor_21_24:
+    push '\e' printc
+    push '['  printc
+    push '2'  printc
+    push '1'  printc
+    push ';'  printc
+    push '2'  printc
+    push '4'  printc
+    push 'H'  printc
+    jmp reset
+
+; Reverse video on.
+reverse:
+    push '\e' printc
+    push '['  printc
+    push '0'  printc
+    push ';'  printc
+    push '7'  printc
+    push 'm'  printc
+    ret
+
+; Change to given background color.
+; Prints "\e[0;4xm" where x is the arg.
+background:
+    push '\e' printc
+    push '['  printc
+    push '0'  printc
+    push ';'  printc
+    push '4'  printc
+    printi
+    push 'm'  printc
+    ret
+
+; Reset all attributes.
+reset:
+    push '\e' printc
+    push '['  printc
+    push '0'  printc
+    push 'm'  printc
+    ret
+
+; Print a given number of spaces.
+print_spaces:
+    dup jz .print_spaces_done
+    push ' '  printc
+    push 1    sub
+    jmp print_spaces
+.print_spaces_done:
+    drop
+    ret
+
+; Print "Crash!" and dump the stack.
+dump_stack:
+    push '\n' printc
+    push 'C'  printc
+    push 'r'  printc
+    push 'a'  printc
+    push 's'  printc
+    push 'h'  printc
+    push '!'  printc
+    push '\n' printc
+.dump_stack_loop:
+    printi
+    push '\n' printc
+    jmp .dump_stack_loop
+
+; Dump heap above 121.
+dump_heap:
+    push 121
+.dump_heap_loop:
+    dup retrieve printi
+    push ';'  printc
+    push 1    add
+    jmp .dump_heap_loop
