@@ -1,10 +1,10 @@
 // Copyright 2020 Andrew Archibald. Licensed under the MIT License.
 
-// tetrisrun is a driver for Peter De Wachter's Whitespace Tetris game.
-// It introduces gravity and provides several key mappings.
+// Command tetrisrun is a driver for Peter De Wachter's Whitespace
+// Tetris game. It introduces gravity and provides several key mappings.
 //
-// For better results, disable input processing and turn off echo back
-// with stty, then run tetris.ws with tetrisrun piped into it.
+// For better results, disable input processing and echo back using
+// stty, then run tetris.ws with tetrisrun piped into it.
 //
 // For example:
 //
@@ -32,19 +32,21 @@ import (
 	"time"
 )
 
-var stdin = bufio.NewReader(os.Stdin)
-var done chan bool
-
 const (
 	escTimeout      = 100 * time.Millisecond
 	initialDropRate = 1000 * time.Millisecond
-	finalDropRate   = 300 * time.Microsecond
+	finalDropRate   = 400 * time.Microsecond
 	dropRateDelta   = 1 * time.Millisecond
+)
+
+var (
+	stdin = bufio.NewReader(os.Stdin)
+	done  = make(chan bool)
+	pause = make(chan bool)
 )
 
 func main() {
 	signal.Ignore(syscall.SIGPIPE)
-	done = make(chan bool)
 	dropRate := initialDropRate
 
 	// Forward key presses to stdout
@@ -81,6 +83,8 @@ Drop:
 			if dropRate > finalDropRate {
 				dropRate -= dropRateDelta
 			}
+		case <-pause:
+			<-pause
 		case <-done:
 			break Drop
 		}
@@ -120,6 +124,18 @@ func readKey() (byte, error) {
 			return 'l', nil
 		case 'q', '\x00', '\x03', '\x04', '\x1a': // q, ^@, ^C, ^D, ^Z
 			return 0, io.EOF
+		case 'p', ' ':
+			pause <- true
+			for {
+				b, err := stdin.ReadByte()
+				if err != nil {
+					return 0, err
+				}
+				if b == 'p' || b == ' ' {
+					break
+				}
+			}
+			pause <- false
 		case '\x1b': // ESC
 			// Translate the ANSI escape sequences for arrow keys into ijkl
 			// and quit on ESC key press. If a bracket is not read within
