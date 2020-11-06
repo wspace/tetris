@@ -8,6 +8,57 @@
 ;   362
 ;   363
 
+; Label mapping:
+;   0   init_heap_loop
+;   1   .init_heap_done
+;   2   init_board
+;   4   .init_board_fill
+;   3   .init_board_bottom
+;   6   label_6
+;   11  label_11
+;   14  label_14
+;   15  label_15
+;   16  label_16
+;   17  label_17
+;   18  label_18
+;   20  label_20
+;   21  label_21
+;   22  label_22
+;   19  label_19
+;   23  label_23
+;   9   label_9
+;   7   seed
+;   24  label_24
+;   27  label_27
+;   29  label_29
+;   30  label_30
+;   28  label_28
+;   32  label_32
+;   33  label_33
+;   34  label_34
+;   8   label_8
+;   35  .neg
+;   10  label_10
+;   13  label_13
+;   36  label_36
+;   37  label_37
+;   39  label_39
+;   40  label_40
+;   31  label_31
+;   5   label_5
+;   43  label_43
+;   41  label_41
+;   12  cursor_21_24
+;   25  reverse
+;   38  background
+;   26  reset
+;   42  print_spaces
+;   44  .print_spaces_done
+;   45  dump_stack
+;   46  .dump_stack_loop
+;   47  dump_heap
+;   48  .dump_heap_loop
+
     push 1  ; 0
     push 0  ; 1
     push 1  ; 2
@@ -350,31 +401,31 @@ label_8:
     dup retrieve
     copy 2 add
     retrieve
-    jn neg
+    jn .neg
 
     push 1 add
     dup retrieve
     copy 2 add
     retrieve
-    jn neg
+    jn .neg
 
     push 1 add
     dup retrieve
     copy 2 add
     retrieve
-    jn neg
+    jn .neg
 
     push 1 add
     dup retrieve
     copy 2 add
     retrieve
-    jn neg
+    jn .neg
 
     drop
     drop
     push 0
     ret
-neg:
+.neg:
     drop
     drop
     push -1
