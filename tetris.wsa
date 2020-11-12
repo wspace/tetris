@@ -59,129 +59,33 @@
 ;   47  dump_heap
 ;   48  .dump_heap_loop
 
-    push 1  ; 0
-    push 0  ; 1
-    push 1  ; 2
-    push 11 ; 3
-    push 12 ; 4
-    push 0  ; 5
-    push 2  ; 6
-    push 11 ; 7
-    push 12 ; 8
-    push 13 ; 9
-    push 14 ; 10
-    push 7  ; 11
-    push 3  ; 12
-    push 0  ; 13
-    push 1  ; 14
-    push 2  ; 15
-    push 13 ; 16
-    push 8  ; 17
-    push 4  ; 18
-    push 0  ; 19
-    push 1  ; 20
-    push 2  ; 21
-    push 11 ; 22
-    push 11 ; 23
-    push 5  ; 24
-    push 0  ; 25
-    push 1  ; 26
-    push 2  ; 27
-    push 12 ; 28
-    push 14 ; 29
-    push 6  ; 30
-    push 0  ; 31
-    push 1  ; 32
-    push 12 ; 33
-    push 13 ; 34
-    push 17 ; 35
-    push 7  ; 36
-    push 1  ; 37
-    push 2  ; 38
-    push 11 ; 39
-    push 12 ; 40
-    push 18 ; 41
-    push 2  ; 42
-    push 1  ; 43
-    push 12 ; 44
-    push 23 ; 45
-    push 34 ; 46
-    push 1  ; 47
-    push 3  ; 48
-    push 1  ; 49
-    push 12 ; 50
-    push 22 ; 51
-    push 23 ; 52
-    push 9  ; 53
-    push 3  ; 54
-    push 0  ; 55
-    push 11 ; 56
-    push 12 ; 57
-    push 13 ; 58
-    push 10 ; 59
-    push 3  ; 60
-    push 0  ; 61
-    push 1  ; 62
-    push 11 ; 63
-    push 22 ; 64
-    push 2  ; 65
-    push 4  ; 66
-    push 0  ; 67
-    push 1  ; 68
-    push 12 ; 69
-    push 23 ; 70
-    push 12 ; 71
-    push 4  ; 72
-    push 2  ; 73
-    push 11 ; 74
-    push 12 ; 75
-    push 13 ; 76
-    push 13 ; 77
-    push 4  ; 78
-    push 0  ; 79
-    push 11 ; 80
-    push 22 ; 81
-    push 23 ; 82
-    push 3  ; 83
-    push 5  ; 84
-    push 1  ; 85
-    push 11 ; 86
-    push 12 ; 87
-    push 23 ; 88
-    push 15 ; 89
-    push 5  ; 90
-    push 1  ; 91
-    push 11 ; 92
-    push 12 ; 93
-    push 13 ; 94
-    push 16 ; 95
-    push 5  ; 96
-    push 0  ; 97
-    push 11 ; 98
-    push 12 ; 99
-    push 22 ; 100
-    push 4  ; 101
-    push 6  ; 102
-    push 1  ; 103
-    push 11 ; 104
-    push 12 ; 105
-    push 22 ; 106
-    push 5  ; 107
-    push 7  ; 108
-    push 0  ; 109
-    push 11 ; 110
-    push 12 ; 111
-    push 23 ; 112
-    push 6  ; 113
-
-    push 113 ; Loop counter
 ; Store values at addresses 0-113
+
+    1  0  1  11 12 0   ; 0-5
+    2  11 12 13 14 7   ; 6-11
+    3  0  1  2  13 8   ; 12-17
+    4  0  1  2  11 11  ; 18-23
+    5  0  1  2  12 14  ; 24-29
+    6  0  1  12 13 17  ; 30-35
+    7  1  2  11 12 18  ; 36-41
+    2  1  12 23 34 1   ; 42-47
+    3  1  12 22 23 9   ; 48-53
+    3  0  11 12 13 10  ; 54-59
+    3  0  1  11 22 2   ; 60-65
+    4  0  1  12 23 12  ; 66-71
+    4  2  11 12 13 13  ; 72-77
+    4  0  11 22 23 3   ; 78-83
+    5  1  11 12 23 15  ; 84-89
+    5  1  11 12 13 16  ; 90-95
+    5  0  11 12 22 4   ; 96-101
+    6  1  11 12 22 5   ; 102-107
+    7  0  11 12 23 6   ; 108-113
+
+    113 ; Loop counter
 init_heap_loop:
-    swap
-    copy 1
-    swap
+    swap copy 1 swap
     store
-    push 1 sub
+    1 -
     dup
     jn .init_heap_done
     jmp init_heap_loop
@@ -189,7 +93,7 @@ init_heap_loop:
     drop
 
     ; Initial seed
-    push 360 push 123456 store
+    360 123456 store
 
 ; Initialize board at addresses 121-352
 ;
@@ -215,65 +119,59 @@ init_heap_loop:
 ;   330: -2  0  0  0  0  0  0  0  0  0  0
 ;   341: -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2 -2
 ;
-    push 121 ; Loop counter
+    121 ; Loop counter
 init_board:
     ; Edge
-    dup push -2  store
-    dup push 341 sub
+    dup -2 store
+    dup 341 -
     jz .init_board_bottom
 .init_board_fill:
-    push 1 add
+    1 +
     ; Center
-    dup push 0   store
-    dup push 11  mod
+    dup 0 store
+    dup 11 %
     jz init_board
     jmp .init_board_fill
 .init_board_bottom:
-    push 1 add
+    1 +
     ; Bottom
-    dup push -2  store
-    dup push 352 sub
+    dup -2 store
+    dup 352 -
     jn .init_board_bottom
     drop
     call label_5
 
 label_6:
-    push 5
+    5
     call seed
     call label_8
     jn label_9
     call label_10
 label_11:
     call cursor_21_24
-    push 361 readc
+    361 readc
     call label_13
     copy 1
     copy 1
-    push 361 retrieve  push 106 sub jz label_14
-    push 361 retrieve  push 107 sub jz label_15
-    push 361 retrieve  push 108 sub jz label_16
-    push 361 retrieve  push 105 sub jz label_17
-    push 361 retrieve  push 27  sub jz label_18
+    361 retrieve 106 - jz label_14
+    361 retrieve 107 - jz label_15
+    361 retrieve 108 - jz label_16
+    361 retrieve 105 - jz label_17
+    361 retrieve 27  - jz label_18
     jmp label_19
 label_14:
-    swap
-    push 1 sub
-    swap
+    swap 1 - swap
     jmp label_20
 label_15:
-    swap
-    push 11 add
-    swap
+    swap 11 + swap
     jmp label_21
 label_16:
-    swap
-    push 1 add
-    swap
+    swap 1 + swap
     jmp label_20
 label_17:
-    push 5 add
+    5 +
     retrieve
-    push 6 mul
+    6 *
     jmp label_20
 label_18:
     drop
@@ -289,12 +187,12 @@ label_21:
     jmp label_22
 label_22:
     call label_10
-    push 362 swap store
-    push 363 swap store
+    362 swap store
+    363 swap store
     drop
     drop
-    push 363 retrieve
-    push 362 retrieve
+    363 retrieve
+    362 retrieve
     call label_10
     jmp label_11
 label_19:
@@ -316,52 +214,47 @@ label_9:
     drop
     call cursor_21_24
     call reverse
-    push ' '   printc
-    push '\n'  printc
-    push '\e'  printc
-    push '['   printc
-    push 'G'   printc
+    ' '  printc
+    '\n' printc
+    '\e' printc
+    '['  printc
+    'G'  printc
     call reset
     end
 
 seed:
     ; Update the seed to (seed*279470273)%4294967291
-    push 360 retrieve
-    push 279470273  mul
-    push 4294967291 mod
+    360 retrieve
+    279470273 * 4294967291 %
     dup
-    push 360 swap store
+    360 swap store
     ; Return (seed%7)*6
-    push 7 mod
-    push 6 mul
+    7 % 6 *
     ret
 
 label_24:
-    push 341
+    341
 label_27:
-    push 11 div
-    push 11 mul
-    push 1  sub
+    11 / 11 * 1 -
     dup
-    push 122 sub
+    122 -
     jn label_28
 label_29:
     dup
     retrieve
     jz label_27
-    push 1  sub
+    1 -
     dup
-    push 11 mod
+    11 %
     jz label_30
     jmp label_29
 label_30:
     dup
-    push 11 div
-    push 10 sub
+    11 / 10 -
     call label_31
     dup
     call label_32
-    push 11 add
+    11 +
     jmp label_27
 label_28:
     drop
@@ -369,21 +262,16 @@ label_28:
 
 label_32:
     dup
-    dup
-    retrieve
-    swap
-    push 11 add
-    swap store
-    dup
-    push 122 sub
+    dup retrieve
+    swap 11 + swap store
+    dup 122 -
     jz label_33
-    push 1 sub
+    1 -
     jmp label_32
 label_33:
-    dup push 0 store
-    push 1 add
-    dup
-    push 11 mod
+    dup 0 store
+    1 +
+    dup 11 %
     jz label_34
     jmp label_33
 label_34:
@@ -393,108 +281,37 @@ label_34:
 label_8:
     copy 1
     copy 1
-    swap
-    push 121 add
-    swap
-
-    push 1 add
-    dup retrieve
-    copy 2 add
-    retrieve
-    jn .neg
-
-    push 1 add
-    dup retrieve
-    copy 2 add
-    retrieve
-    jn .neg
-
-    push 1 add
-    dup retrieve
-    copy 2 add
-    retrieve
-    jn .neg
-
-    push 1 add
-    dup retrieve
-    copy 2 add
-    retrieve
-    jn .neg
-
-    drop
-    drop
-    push 0
+    swap 121 + swap
+    1 + dup retrieve copy 2 + retrieve jn .neg
+    1 + dup retrieve copy 2 + retrieve jn .neg
+    1 + dup retrieve copy 2 + retrieve jn .neg
+    1 + dup retrieve copy 2 + retrieve jn .neg
+    drop drop 0
     ret
 .neg:
-    drop
-    drop
-    push -1
+    drop drop -1
     ret
 
 label_10:
     call label_36
-    swap
-    push 121 add
-    swap
-    push 1 add
-    dup
-    retrieve
-    copy 2 add
-    push -1
-    store
-    push 1 add
-    dup
-    retrieve
-    copy 2 add
-    push -1
-    store
-    push 1 add
-    dup
-    retrieve
-    copy 2 add
-    push -1
-    store
-    push 1 add
-    dup
-    retrieve
-    copy 2 add
-    push -1
-    store
-    push 4 sub
-    swap
-    push 121 sub
-    swap
+    swap 121 + swap
+    1 + dup retrieve copy 2 + -1 store
+    1 + dup retrieve copy 2 + -1 store
+    1 + dup retrieve copy 2 + -1 store
+    1 + dup retrieve copy 2 + -1 store
+    4 -
+    swap 121 - swap
     ret
 
 label_13:
     call label_37
-    swap
-    push 121 add
-    swap
-    push 1 add
-    dup retrieve
-    copy 2 add
-    push 0
-    store
-    push 1 add
-    dup retrieve
-    copy 2 add
-    push 0
-    store
-    push 1 add
-    dup retrieve
-    copy 2 add
-    push 0
-    store
-    push 1 add
-    dup retrieve
-    copy 2 add
-    push 0
-    store
-    push 4 sub
-    swap
-    push 121 sub
-    swap
+    swap 121 + swap
+    1 + dup retrieve copy 2 + 0 store
+    1 + dup retrieve copy 2 + 0 store
+    1 + dup retrieve copy 2 + 0 store
+    1 + dup retrieve copy 2 + 0 store
+    4 -
+    swap 121 - swap
     ret
 
 label_36:
@@ -502,83 +319,61 @@ label_36:
     retrieve call background
     jmp label_39
 label_37:
-    push 0 call background ; black
+    0 call background ; black
 label_39:
-    push 1 add
-    dup retrieve
-    copy 2 add
-    call label_40
-
-    push 1 add
-    dup retrieve
-    copy 2 add
-    call label_40
-
-    push 1 add
-    dup retrieve
-    copy 2 add
-    call label_40
-
-    push 1 add
-    dup retrieve
-    copy 2 add
-    call label_40
-
-    push 4 sub
+    1 + dup retrieve copy 2 + call label_40
+    1 + dup retrieve copy 2 + call label_40
+    1 + dup retrieve copy 2 + call label_40
+    1 + dup retrieve copy 2 + call label_40
+    4 -
     ret
 
 label_40:
     dup
     ; Move cursor to line (n/11+1), col ((n%11)*2+1)
-    push '\e' printc
-    push '['  printc
-    push 11   div
-    push 1    add
-    printi
-    push ';'  printc
-    push 11   mod
-    push 2    mul
-    push 1    add
-    printi
-    push 'H'  printc
+    '\e' printc
+    '['  printc
+    11 / 1 + printi
+    ';'  printc
+    11 % 2 * 1 + printi
+    'H'  printc
     ; ?
-    push '\e' printc
-    push '['  printc
-    push '2'  printc
-    push 'X'  printc
-    push ' '  printc
-    push ' '  printc
+    '\e' printc
+    '['  printc
+    '2'  printc
+    'X'  printc
+    ' '  printc
+    ' '  printc
     ret
 
 label_31:
     call reset
-    push '\e' printc
-    push '['  printc
+    '\e' printc
+    '['  printc
     printi
-    push 'H'  printc
-    push '\e' printc
-    push '['  printc
-    push '1'  printc
-    push 'M'  printc
+    'H'  printc
+    '\e' printc
+    '['  printc
+    '1'  printc
+    'M'  printc
     jmp label_41
 
 label_5:
     ; Clear entire screen
-    push '\e' printc
-    push '['  printc
-    push '2'  printc
-    push 'J'  printc
+    '\e' printc
+    '['  printc
+    '2'  printc
+    'J'  printc
     ; ?
-    push '\e' printc
-    push '['  printc
-    push 'H'  printc
+    '\e' printc
+    '['  printc
+    'H'  printc
     call reverse
-    push 23
-    call print_spaces
-    push -20
+    23 call print_spaces
+    -20
 label_43:
     call label_41
-    push 1 add
+    1 +
     dup
     jn label_43
     drop
@@ -587,46 +382,46 @@ label_43:
 label_41:
     call reset
     ; Move cursor to upper left corner
-    push '\e' printc
-    push '['  printc
-    push 'H'  printc
+    '\e' printc
+    '['  printc
+    'H'  printc
     ; ?
-    push '\e' printc
-    push '['  printc
-    push 'L'  printc
+    '\e' printc
+    '['  printc
+    'L'  printc
     call reverse
-    push ' '  printc
-    push ' '  printc
+    ' '  printc
+    ' '  printc
     ; Move cursor to column 23
-    push '\e' printc
-    push '['  printc
-    push '2'  printc
-    push '3'  printc
-    push 'G'  printc
-    push ' '  printc
-    push ' '  printc
+    '\e' printc
+    '['  printc
+    '2'  printc
+    '3'  printc
+    'G'  printc
+    ' '  printc
+    ' '  printc
     ret
 
 ; Move cursor to line 21, col 24
 cursor_21_24:
-    push '\e' printc
-    push '['  printc
-    push '2'  printc
-    push '1'  printc
-    push ';'  printc
-    push '2'  printc
-    push '4'  printc
-    push 'H'  printc
+    '\e' printc
+    '['  printc
+    '2'  printc
+    '1'  printc
+    ';'  printc
+    '2'  printc
+    '4'  printc
+    'H'  printc
     jmp reset
 
 ; Reverse video on
 reverse:
-    push '\e' printc
-    push '['  printc
-    push '0'  printc
-    push ';'  printc
-    push '7'  printc
-    push 'm'  printc
+    '\e' printc
+    '['  printc
+    '0'  printc
+    ';'  printc
+    '7'  printc
+    'm'  printc
     ret
 
 ; Reset attributes and set background color, given 0-7
@@ -639,28 +434,28 @@ reverse:
 ;   46 cyan
 ;   47 white
 background:
-    push '\e' printc
-    push '['  printc
-    push '0'  printc
-    push ';'  printc
-    push '4'  printc
+    '\e' printc
+    '['  printc
+    '0'  printc
+    ';'  printc
+    '4'  printc
     printi
-    push 'm'  printc
+    'm'  printc
     ret
 
 ; Reset all attributes
 reset:
-    push '\e' printc
-    push '['  printc
-    push '0'  printc
-    push 'm'  printc
+    '\e' printc
+    '['  printc
+    '0'  printc
+    'm'  printc
     ret
 
 ; Print a given number of spaces
 print_spaces:
     dup jz .print_spaces_done
-    push ' '  printc
-    push 1    sub
+    ' ' printc
+    1 -
     jmp print_spaces
 .print_spaces_done:
     drop
@@ -668,24 +463,24 @@ print_spaces:
 
 ; Print "Crash!" and dump the stack
 dump_stack:
-    push '\n' printc
-    push 'C'  printc
-    push 'r'  printc
-    push 'a'  printc
-    push 's'  printc
-    push 'h'  printc
-    push '!'  printc
-    push '\n' printc
+    '\n' printc
+    'C'  printc
+    'r'  printc
+    'a'  printc
+    's'  printc
+    'h'  printc
+    '!'  printc
+    '\n' printc
 .dump_stack_loop:
     printi
-    push '\n' printc
+    '\n' printc
     jmp .dump_stack_loop
 
 ; Dump heap values above 121
 dump_heap:
-    push 121
+    121
 .dump_heap_loop:
     dup retrieve printi
-    push ';'  printc
-    push 1    add
+    ';' printc
+    1 +
     jmp .dump_heap_loop
