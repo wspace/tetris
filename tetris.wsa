@@ -5,6 +5,7 @@
 ;   0-113
 ;   121-352 board
 ;   360     seed
+;   361     read char
 ;   362
 ;   363
 
@@ -16,11 +17,11 @@
 ;   3   .init_board_bottom
 ;   6   label_6
 ;   11  label_11
-;   14  label_14
-;   15  label_15
-;   16  label_16
-;   17  label_17
-;   18  label_18
+;   14  .read_j
+;   15  .read_k
+;   16  .read_l
+;   17  .read_i
+;   18  .read_esc
 ;   20  label_20
 ;   21  label_21
 ;   22  label_22
@@ -36,13 +37,13 @@
 ;   32  label_32
 ;   33  label_33
 ;   34  label_34
-;   8   label_8
+;   8   4x_jn
 ;   35  .neg
-;   10  label_10
-;   13  label_13
+;   10  4x_store_n1
+;   13  4x_store_0
 ;   36  label_36
 ;   37  label_37
-;   39  label_39
+;   39  4x_call
 ;   40  label_40
 ;   31  label_31
 ;   5   label_5
@@ -144,74 +145,68 @@ init_board:
 label_6:
     5
     call seed
-    call label_8
+    call 4x_jn
     jn label_9
-    call label_10
+
+    call 4x_store_n1
 label_11:
     call cursor_21_24
     361 readc
-    call label_13
+    call 4x_store_0
     copy 1
     copy 1
-    361 retrieve 106 - jz label_14
-    361 retrieve 107 - jz label_15
-    361 retrieve 108 - jz label_16
-    361 retrieve 105 - jz label_17
-    361 retrieve 27  - jz label_18
+    361 retrieve 'j'  - jz .read_j
+    361 retrieve 'k'  - jz .read_k
+    361 retrieve 'l'  - jz .read_l
+    361 retrieve 'i'  - jz .read_i
+    361 retrieve '\e' - jz .read_esc
     jmp label_19
-label_14:
+.read_j:
     swap 1 - swap
     jmp label_20
-label_15:
+.read_k:
     swap 11 + swap
     jmp label_21
-label_16:
+.read_l:
     swap 1 + swap
     jmp label_20
-label_17:
-    5 +
-    retrieve
-    6 *
+.read_i:
+    5 + retrieve 6 *
     jmp label_20
-label_18:
-    drop
-    drop
+.read_esc:
+    drop drop
     jmp label_9
+
 label_20:
-    call label_8
+    call 4x_jn
     jn label_19
     jmp label_22
 label_21:
-    call label_8
+    call 4x_jn
     jn label_23
     jmp label_22
 label_22:
-    call label_10
+    call 4x_store_n1
     362 swap store
     363 swap store
-    drop
-    drop
+    drop drop
     363 retrieve
     362 retrieve
-    call label_10
+    call 4x_store_n1
     jmp label_11
 label_19:
-    drop
-    drop
-    call label_10
+    drop drop
+    call 4x_store_n1
     jmp label_11
 label_23:
-    drop
-    drop
-    call label_10
-    drop
-    drop
+    drop drop
+    call 4x_store_n1
+    drop drop
     call label_24
     jmp label_6
 label_9:
-    call label_10
-    drop
-    drop
+    call 4x_store_n1
+    drop drop
     call cursor_21_24
     call reverse
     ' '  printc
@@ -278,7 +273,7 @@ label_34:
     drop
     ret
 
-label_8:
+4x_jn:
     copy 1
     copy 1
     swap 121 + swap
@@ -292,7 +287,7 @@ label_8:
     drop drop -1
     ret
 
-label_10:
+4x_store_n1:
     call label_36
     swap 121 + swap
     1 + dup retrieve copy 2 + -1 store
@@ -303,7 +298,7 @@ label_10:
     swap 121 - swap
     ret
 
-label_13:
+4x_store_0:
     call label_37
     swap 121 + swap
     1 + dup retrieve copy 2 + 0 store
@@ -317,10 +312,10 @@ label_13:
 label_36:
     dup
     retrieve call background
-    jmp label_39
+    jmp 4x_call
 label_37:
     0 call background ; black
-label_39:
+4x_call:
     1 + dup retrieve copy 2 + call label_40
     1 + dup retrieve copy 2 + call label_40
     1 + dup retrieve copy 2 + call label_40
