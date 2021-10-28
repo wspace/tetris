@@ -1,7 +1,7 @@
 # Copyright 2008 Peter De Wachter
 # Copyright 2020-2021 Andrew Archibald
 
-# Heap:
+# Heap partitions:
 #   0-113
 #   121-352 board
 #   360     seed
@@ -9,56 +9,7 @@
 #   362
 #   363
 
-# Label mapping:
-#   0   init_heap_loop
-#   1   .init_heap_done
-#   2   init_board
-#   4   .init_board_fill
-#   3   .init_board_bottom
-#   6   label_6
-#   11  label_11
-#   14  .read_j
-#   15  .read_k
-#   16  .read_l
-#   17  .read_i
-#   18  .read_esc
-#   20  label_20
-#   21  label_21
-#   22  label_22
-#   19  label_19
-#   23  label_23
-#   9   label_9
-#   7   seed
-#   24  label_24
-#   27  label_27
-#   29  label_29
-#   30  label_30
-#   28  label_28
-#   32  label_32
-#   33  label_33
-#   34  label_34
-#   8   4x_jn
-#   35  .neg
-#   10  4x_store_n1
-#   13  4x_store_0
-#   36  label_36
-#   37  label_37
-#   39  4x_call
-#   40  label_40
-#   31  label_31
-#   5   label_5
-#   43  label_43
-#   41  label_41
-#   12  cursor_21_24
-#   25  reverse
-#   38  background
-#   26  reset
-#   42  print_spaces
-#   44  .print_spaces_done
-#   45  dump_stack
-#   46  .dump_stack_loop
-#   47  dump_heap
-#   48  .dump_heap_loop
+# Labels are assigned in order of usage
 
 # Store values at addresses 0-113
 
@@ -87,8 +38,7 @@ init_heap_loop:
     swap ^1 swap
     store
     1 -
-    dup
-    jn .init_heap_done
+    ^ jn .init_heap_done
     jmp init_heap_loop
 .init_heap_done:
     drop
@@ -123,22 +73,19 @@ init_heap_loop:
     121 # Loop counter
 init_board:
     # Edge
-    dup -2 store
-    dup 341 -
-    jz .init_board_bottom
+    ^ -2 store
+    ^ 341 - jz .init_board_bottom
 .init_board_fill:
     1 +
     # Center
-    dup 0 store
-    dup 11 %
-    jz init_board
+    ^ 0 store
+    ^ 11 % jz init_board
     jmp .init_board_fill
 .init_board_bottom:
     1 +
     # Bottom
-    dup -2 store
-    dup 352 -
-    jn .init_board_bottom
+    ^ -2 store
+    ^ 352 - jn .init_board_bottom
     drop
     call label_5
 
@@ -153,13 +100,12 @@ label_11:
     call cursor_21_24
     361 readc
     call 4x_store_0
-    ^1
-    ^1
-    @361 'j'  - jz .read_j
-    @361 'k'  - jz .read_k
-    @361 'l'  - jz .read_l
-    @361 'i'  - jz .read_i
-    @361 '\e' - jz .read_esc
+    2dup
+    361 retrieve 'j'  - jz .read_j
+    361 retrieve 'k'  - jz .read_k
+    361 retrieve 'l'  - jz .read_l
+    361 retrieve 'i'  - jz .read_i
+    361 retrieve '\e' - jz .read_esc
     jmp label_19
 .read_j:
     swap 1 - swap
@@ -171,10 +117,10 @@ label_11:
     swap 1 + swap
     jmp label_20
 .read_i:
-    5 + @ 6 *
+    5 + retrieve 6 *
     jmp label_20
 .read_esc:
-    drop drop
+    2drop
     jmp label_9
 
 label_20:
@@ -189,40 +135,35 @@ label_22:
     call 4x_store_n1
     362 swap store
     363 swap store
-    drop drop
-    @363
-    @362
+    2drop
+    363 retrieve
+    362 retrieve
     call 4x_store_n1
     jmp label_11
 label_19:
-    drop drop
+    2drop
     call 4x_store_n1
     jmp label_11
 label_23:
-    drop drop
+    2drop
     call 4x_store_n1
-    drop drop
+    2drop
     call label_24
     jmp label_6
 label_9:
     call 4x_store_n1
-    drop drop
+    2drop
     call cursor_21_24
     call reverse
-    ' '  printc
-    '\n' printc
-    '\e' printc
-    '['  printc
-    'G'  printc
+    " \n\e[G" prints
     call reset
     end
 
 seed:
     # Update the seed to (seed*279470273)%4294967291
-    @360
+    360 retrieve
     279470273 * 4294967291 %
-    dup
-    360 swap store
+    ^ 360 swap store
     # Return (seed%7)*6
     7 % 6 *
     ret
@@ -231,22 +172,16 @@ label_24:
     341
 label_27:
     11 / 11 * 1 -
-    dup
-    122 -
-    jn label_28
+    ^ 122 - jn label_28
 label_29:
-    ^@
-    jz label_27
+    ^ retrieve jz label_27
     1 -
-    dup
-    11 %
-    jz label_30
+    ^ 11 % jz label_30
     jmp label_29
 label_30:
-    dup
-    11 / 10 -
+    ^ 11 / 10 -
     call label_31
-    dup
+    ^
     call label_32
     11 +
     jmp label_27
@@ -255,44 +190,40 @@ label_28:
     ret
 
 label_32:
-    dup
-    ^@
+    ^ ^ retrieve
     swap 11 + swap store
-    dup 122 -
-    jz label_33
+    ^ 122 - jz label_33
     1 -
     jmp label_32
 label_33:
-    dup 0 store
+    ^ 0 store
     1 +
-    dup 11 %
-    jz label_34
+    ^ 11 % jz label_34
     jmp label_33
 label_34:
     drop
     ret
 
 4x_jn:
-    ^1
-    ^1
+    2dup
     swap 121 + swap
-    1 + ^@ ^2 + @ jn .neg
-    1 + ^@ ^2 + @ jn .neg
-    1 + ^@ ^2 + @ jn .neg
-    1 + ^@ ^2 + @ jn .neg
-    drop drop 0
+    1 + ^ retrieve ^2 + retrieve jn .neg
+    1 + ^ retrieve ^2 + retrieve jn .neg
+    1 + ^ retrieve ^2 + retrieve jn .neg
+    1 + ^ retrieve ^2 + retrieve jn .neg
+    2drop 0
     ret
 .neg:
-    drop drop -1
+    2drop -1
     ret
 
 4x_store_n1:
     call label_36
     swap 121 + swap
-    1 + ^@ ^2 + -1 store
-    1 + ^@ ^2 + -1 store
-    1 + ^@ ^2 + -1 store
-    1 + ^@ ^2 + -1 store
+    1 + ^ retrieve ^2 + -1 store
+    1 + ^ retrieve ^2 + -1 store
+    1 + ^ retrieve ^2 + -1 store
+    1 + ^ retrieve ^2 + -1 store
     4 -
     swap 121 - swap
     ret
@@ -300,35 +231,35 @@ label_34:
 4x_store_0:
     call label_37
     swap 121 + swap
-    1 + ^@ ^2 + 0 store
-    1 + ^@ ^2 + 0 store
-    1 + ^@ ^2 + 0 store
-    1 + ^@ ^2 + 0 store
+    1 + ^ retrieve ^2 + 0 store
+    1 + ^ retrieve ^2 + 0 store
+    1 + ^ retrieve ^2 + 0 store
+    1 + ^ retrieve ^2 + 0 store
     4 -
     swap 121 - swap
     ret
 
 label_36:
-    ^@ call background
+    ^ retrieve call background
     jmp 4x_call
 label_37:
     0 call background # black
 4x_call:
-    1 + ^@ ^2 + call label_40
-    1 + ^@ ^2 + call label_40
-    1 + ^@ ^2 + call label_40
-    1 + ^@ ^2 + call label_40
+    1 + ^ retrieve ^2 + call label_40
+    1 + ^ retrieve ^2 + call label_40
+    1 + ^ retrieve ^2 + call label_40
+    1 + ^ retrieve ^2 + call label_40
     4 -
     ret
 
 label_40:
-    dup
+    ^
     # Move cursor to line (n/11+1), col ((n%11)*2+1)
     "\e[" prints
     11 / 1 + printi
-    ';'  printc
+    ';' printc
     11 % 2 * 1 + printi
-    'H'  printc
+    'H' printc
     # ?
     "\e[2X  " prints
     ret
@@ -351,8 +282,7 @@ label_5:
 label_43:
     call label_41
     1 +
-    dup
-    jn label_43
+    ^ jn label_43
     drop
     ret
 
@@ -400,7 +330,7 @@ reset:
 
 # Print a given number of spaces
 print_spaces:
-    dup jz .print_spaces_done
+    ^ jz .print_spaces_done
     ' ' printc
     1 -
     jmp print_spaces
@@ -420,7 +350,7 @@ dump_stack:
 dump_heap:
     121
 .dump_heap_loop:
-    ^@ printi
+    ^ retrieve printi
     ';' printc
     1 +
     jmp .dump_heap_loop
