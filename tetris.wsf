@@ -4,7 +4,7 @@
 # Heap partitions:
 #   0-113
 #   121-352 board
-#   360     seed
+#   360     rand
 #   361     read char
 #   362
 #   363
@@ -87,16 +87,16 @@ init_board:
     ^ -2 store
     ^ 352 - jn .init_board_bottom
     drop
-    call label_5
+    call clear
 
 label_6:
     5
-    call seed
+    call rand
     call 4x_jn
     jn label_9
 
     call 4x_store_n1
-label_11:
+read_key:
     call cursor_21_24
     361 readc
     call 4x_store_0
@@ -127,10 +127,12 @@ label_20:
     call 4x_jn
     jn label_19
     jmp label_22
+
 label_21:
     call 4x_jn
     jn label_23
     jmp label_22
+
 label_22:
     call 4x_store_n1
     362 swap store
@@ -139,11 +141,11 @@ label_22:
     363 retrieve
     362 retrieve
     call 4x_store_n1
-    jmp label_11
+    jmp read_key
 label_19:
     2drop
     call 4x_store_n1
-    jmp label_11
+    jmp read_key
 label_23:
     2drop
     call 4x_store_n1
@@ -159,12 +161,13 @@ label_9:
     call reset
     end
 
-seed:
-    # Update the seed to (seed*279470273)%4294967291
+# ( -- rand)
+rand:
+    # Update the rand state to (state*279470273)%4294967291
     360 retrieve
     279470273 * 4294967291 %
     ^ 360 swap store
-    # Return (seed%7)*6
+    # Return (state%7)*6
     7 % 6 *
     ret
 
@@ -182,19 +185,21 @@ label_30:
     ^ 11 / 10 -
     call label_31
     ^
-    call label_32
+    call some_loop
     11 +
     jmp label_27
 label_28:
     drop
     ret
 
-label_32:
+# (n -- )
+some_loop:
     ^ ^ retrieve
     swap 11 + swap store
     ^ 122 - jz label_33
     1 -
-    jmp label_32
+    jmp some_loop
+# (122 -- )
 label_33:
     ^ 0 store
     1 +
@@ -204,6 +209,7 @@ label_34:
     drop
     ret
 
+# (x y -- )
 4x_jn:
     2dup
     swap 121 + swap
@@ -252,6 +258,7 @@ label_37:
     4 -
     ret
 
+# (n -- )
 label_40:
     ^
     # Move cursor to line (n/11+1), col ((n%11)*2+1)
@@ -264,6 +271,7 @@ label_40:
     "\e[2X  " prints
     ret
 
+# (n -- )
 label_31:
     call reset
     "\e[" prints
@@ -271,10 +279,11 @@ label_31:
     "H\e[1M" prints
     jmp label_41
 
-label_5:
+# ( -- )
+clear:
     # Clear entire screen
     "\e[2J" prints
-    # ?
+    # Move cursor to upper left corner
     "\e[H" prints
     call reverse
     23 call print_spaces
@@ -286,6 +295,7 @@ label_43:
     drop
     ret
 
+# ( -- )
 label_41:
     call reset
     # Move cursor to upper left corner
@@ -293,17 +303,18 @@ label_41:
     # ?
     "\e[L" prints
     call reverse
-    "  " prints
     # Move cursor to column 23
-    "\e[23G  " prints
+    "  \e[23G  " prints
     ret
 
 # Move cursor to line 21, col 24
+# ( -- )
 cursor_21_24:
     "\e[21;24H" prints
     jmp reset
 
 # Reverse video on
+# ( -- )
 reverse:
     "\e[0;7m" prints
     ret
@@ -317,6 +328,7 @@ reverse:
 #   45 magenta
 #   46 cyan
 #   47 white
+# (color -- )
 background:
     "\e[0;4" prints
     printi
@@ -324,11 +336,13 @@ background:
     ret
 
 # Reset all attributes
+# ( -- )
 reset:
     "\e[0m" prints
     ret
 
-# Print a given number of spaces
+# Print n spaces
+# (n -- )
 print_spaces:
     ^ jz .print_spaces_done
     ' ' printc
@@ -339,6 +353,7 @@ print_spaces:
     ret
 
 # Print "Crash!" and dump the stack
+# ( -- )
 dump_stack:
     "\nCrash!\n" prints
 .dump_stack_loop:
@@ -347,6 +362,7 @@ dump_stack:
     jmp .dump_stack_loop
 
 # Dump heap values above 121
+# ( -- )
 dump_heap:
     121
 .dump_heap_loop:
