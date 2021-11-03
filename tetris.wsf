@@ -6,8 +6,8 @@
 #   121-352 board
 #   360     rand
 #   361     read char
-#   362
-#   363
+#   362     tmp
+#   363     tmp
 
 # Labels are assigned in order of usage
 
@@ -99,7 +99,7 @@ label_6:
 read_key:
     call cursor_21_24
     361 readc
-    call 4x_store_0
+    call clear_piece
     2dup
     361 retrieve 'j'  - jz .read_j
     361 retrieve 'k'  - jz .read_k
@@ -107,16 +107,16 @@ read_key:
     361 retrieve 'i'  - jz .read_i
     361 retrieve '\e' - jz .read_esc
     jmp label_19
-.read_j:
+.read_j: # Move left
     swap 1 - swap
     jmp label_20
-.read_k:
+.read_k: # Move down
     swap 11 + swap
     jmp label_21
-.read_l:
+.read_l: # Move right
     swap 1 + swap
     jmp label_20
-.read_i:
+.read_i: # Rotate
     5 + retrieve 6 *
     jmp label_20
 .read_esc:
@@ -161,55 +161,53 @@ label_9:
     call reset
     end
 
+# Return a pseudorandom number in {6, 12, 18, 24, 32, 36}
 # ( -- rand)
 rand:
-    # Update the rand state to (state*279470273)%4294967291
+    # Update the rand state to (rand*279470273)%4294967291
     360 retrieve
     279470273 * 4294967291 %
     ^ 360 swap store
-    # Return (state%7)*6
+    # Return (rand%7)*6
     7 % 6 *
     ret
 
 label_24:
     341
-label_27:
+.outer_begin:
     11 / 11 * 1 -
-    ^ 122 - jn label_28
-label_29:
-    ^ retrieve jz label_27
+    ^ 122 - jn .ret
+.inner_begin:
+    ^ retrieve jz .outer_begin
     1 -
-    ^ 11 % jz label_30
-    jmp label_29
-label_30:
-    ^ 11 / 10 -
-    call label_31
-    ^
-    call some_loop
+    ^ 11 % jz .break_inner
+    jmp .inner_begin
+.break_inner:
+    ^ 11 / 10 - call label_31
+    ^ call .loop1
     11 +
-    jmp label_27
-label_28:
-    drop
-    ret
+    jmp .outer_begin
+.ret:
+    drop ret
 
 # (n -- )
-some_loop:
+.loop1:
     ^ ^ retrieve
     swap 11 + swap store
-    ^ 122 - jz label_33
+    ^ 122 - jz .loop2
     1 -
-    jmp some_loop
+    jmp .loop1
 # (122 -- )
-label_33:
+.loop2:
     ^ 0 store
     1 +
-    ^ 11 % jz label_34
-    jmp label_33
-label_34:
+    ^ 11 % jz .label_34
+    jmp .loop2
+.label_34:
     drop
     ret
 
-# (x y -- )
+# (x y -- x y n)
 4x_jn:
     2dup
     swap 121 + swap
@@ -224,7 +222,7 @@ label_34:
     ret
 
 4x_store_n1:
-    call label_36
+    call draw_piece
     swap 121 + swap
     1 + ^ retrieve ^2 + -1 store
     1 + ^ retrieve ^2 + -1 store
@@ -234,8 +232,9 @@ label_34:
     swap 121 - swap
     ret
 
-4x_store_0:
-    call label_37
+# Clear piece in the heap and visually
+clear_piece:
+    call erase_piece
     swap 121 + swap
     1 + ^ retrieve ^2 + 0 store
     1 + ^ retrieve ^2 + 0 store
@@ -245,12 +244,18 @@ label_34:
     swap 121 - swap
     ret
 
-label_36:
+# Draw the piece with the color at the address c
+# (x y c -- x y)
+draw_piece:
     ^ retrieve call background
-    jmp 4x_call
-label_37:
+    jmp .draw_piece
+
+# Erase the piece visually
+# (x y -- x y)
+erase_piece:
     0 call background # black
-4x_call:
+
+.draw_piece:
     1 + ^ retrieve ^2 + call label_40
     1 + ^ retrieve ^2 + call label_40
     1 + ^ retrieve ^2 + call label_40
@@ -271,9 +276,10 @@ label_40:
     "\e[2X  " prints
     ret
 
-# (n -- )
+# (l -- )
 label_31:
     call reset
+    # Move cursor to line l
     "\e[" prints
     printi
     "H\e[1M" prints
