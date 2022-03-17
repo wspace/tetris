@@ -1,5 +1,5 @@
 # Copyright 2008 Peter De Wachter
-# Copyright 2020-2021 Andrew Archibald
+# Copyright 2020-2022 Andrew Archibald
 
 # Heap partitions:
 #   0-113
@@ -37,7 +37,7 @@
 init_heap_loop:
     swap ^1 swap
     store
-    1 -
+    1-
     ^ jn .init_heap_done
     jmp init_heap_loop
 .init_heap_done:
@@ -74,18 +74,18 @@ init_heap_loop:
 init_board:
     # Edge
     ^ -2 store
-    ^ 341 - jz .init_board_bottom
+    ^ 341 j= .init_board_bottom
 .init_board_fill:
-    1 +
+    1+
     # Center
     ^ 0 store
-    ^ 11 % jz init_board
+    ^ 11% jz init_board
     jmp .init_board_fill
 .init_board_bottom:
-    1 +
+    1+
     # Bottom
     ^ -2 store
-    ^ 352 - jn .init_board_bottom
+    ^ 352 j< .init_board_bottom
     drop
     call clear
 
@@ -101,23 +101,23 @@ read_key:
     361 readc
     call clear_piece
     2dup
-    361 retrieve 'j'  - jz .read_j
-    361 retrieve 'k'  - jz .read_k
-    361 retrieve 'l'  - jz .read_l
-    361 retrieve 'i'  - jz .read_i
-    361 retrieve '\e' - jz .read_esc
+    361 retrieve 'j'  j= .read_j
+    361 retrieve 'k'  j= .read_k
+    361 retrieve 'l'  j= .read_l
+    361 retrieve 'i'  j= .read_i
+    361 retrieve '\e' j= .read_esc
     jmp label_19
 .read_j: # Move left
-    swap 1 - swap
+    swap 1- swap
     jmp label_20
 .read_k: # Move down
-    swap 11 + swap
+    swap 11+ swap
     jmp label_21
 .read_l: # Move right
-    swap 1 + swap
+    swap 1+ swap
     jmp label_20
 .read_i: # Rotate
-    5 + retrieve 6 *
+    5+ retrieve 6*
     jmp label_20
 .read_esc:
     2drop
@@ -166,26 +166,25 @@ label_9:
 rand:
     # Update the rand state to (rand*279470273)%4294967291
     360 retrieve
-    279470273 * 4294967291 %
+    279470273* 4294967291%
     ^ 360 swap store
     # Return (rand%7)*6
-    7 % 6 *
-    ret
+    7% 6* ret
 
 label_24:
     341
 .outer_begin:
-    11 / 11 * 1 -
-    ^ 122 - jn .ret
+    11/ 11* 1-
+    ^ 122 j< .ret
 .inner_begin:
     ^ retrieve jz .outer_begin
-    1 -
-    ^ 11 % jz .break_inner
+    1-
+    ^ 11% jz .break_inner
     jmp .inner_begin
 .break_inner:
-    ^ 11 / 10 - call label_31
+    ^ 11/ 10- call label_31
     ^ call .loop1
-    11 +
+    11+
     jmp .outer_begin
 .ret:
     drop ret
@@ -193,54 +192,51 @@ label_24:
 # (n -- )
 .loop1:
     ^ ^ retrieve
-    swap 11 + swap store
-    ^ 122 - jz .loop2
-    1 -
+    swap 11+ swap store
+    ^ 122 j= .loop2
+    1-
     jmp .loop1
 # (122 -- )
 .loop2:
     ^ 0 store
-    1 +
-    ^ 11 % jz .label_34
+    1+
+    ^ 11% jz .label_34
     jmp .loop2
 .label_34:
-    drop
-    ret
+    drop ret
 
 # (x y -- x y n)
 4x_jn:
     2dup
-    swap 121 + swap
-    1 + ^ retrieve ^2 + retrieve jn .neg
-    1 + ^ retrieve ^2 + retrieve jn .neg
-    1 + ^ retrieve ^2 + retrieve jn .neg
-    1 + ^ retrieve ^2 + retrieve jn .neg
-    2drop 0
-    ret
+    swap 121+ swap
+    1+ ^ retrieve ^2 + retrieve jn .neg
+    1+ ^ retrieve ^2 + retrieve jn .neg
+    1+ ^ retrieve ^2 + retrieve jn .neg
+    1+ ^ retrieve ^2 + retrieve jn .neg
+    2drop 0 ret
 .neg:
-    2drop -1
-    ret
+    2drop -1 ret
 
 4x_store_n1:
     call draw_piece
-    swap 121 + swap
-    1 + ^ retrieve ^2 + -1 store
-    1 + ^ retrieve ^2 + -1 store
-    1 + ^ retrieve ^2 + -1 store
-    1 + ^ retrieve ^2 + -1 store
-    4 -
-    swap 121 - swap
+    swap 121+ swap
+    1+ ^ retrieve ^2 + -1 store
+    1+ ^ retrieve ^2 + -1 store
+    1+ ^ retrieve ^2 + -1 store
+    1+ ^ retrieve ^2 + -1 store
+    4-
+    swap 121- swap
     ret
 
 # Clear piece in the heap and visually
 clear_piece:
     call erase_piece
-    swap 121 + swap
-    1 + ^ retrieve ^2 + 0 store
-    1 + ^ retrieve ^2 + 0 store
-    1 + ^ retrieve ^2 + 0 store
-    1 + ^ retrieve ^2 + 0 store
-    4 -
+    swap 121+ swap
+    1+ ^ retrieve ^2 + 0 store
+    1+ ^ retrieve ^2 + 0 store
+    1+ ^ retrieve ^2 + 0 store
+    1+ ^ retrieve ^2 + 0 store
+    4-
     swap 121 - swap
     ret
 
@@ -256,11 +252,11 @@ erase_piece:
     0 call background # black
 
 .draw_piece:
-    1 + ^ retrieve ^2 + call label_40
-    1 + ^ retrieve ^2 + call label_40
-    1 + ^ retrieve ^2 + call label_40
-    1 + ^ retrieve ^2 + call label_40
-    4 -
+    1+ ^ retrieve ^2 + call label_40
+    1+ ^ retrieve ^2 + call label_40
+    1+ ^ retrieve ^2 + call label_40
+    1+ ^ retrieve ^2 + call label_40
+    4-
     ret
 
 # (n -- )
@@ -268,9 +264,9 @@ label_40:
     ^
     # Move cursor to line (n/11+1), col ((n%11)*2+1)
     "\e[" prints
-    11 / 1 + printi
+    11/ 1+ printi
     ';' printc
-    11 % 2 * 1 + printi
+    11% 2* 1+ printi
     'H' printc
     # ?
     "\e[2X  " prints
@@ -296,10 +292,9 @@ clear:
     -20
 label_43:
     call label_41
-    1 +
+    1+
     ^ jn label_43
-    drop
-    ret
+    drop ret
 
 # ( -- )
 label_41:
@@ -352,11 +347,10 @@ reset:
 print_spaces:
     ^ jz .print_spaces_done
     ' ' printc
-    1 -
+    1-
     jmp print_spaces
 .print_spaces_done:
-    drop
-    ret
+    drop ret
 
 # Print "Crash!" and dump the stack
 # ( -- )
@@ -374,5 +368,5 @@ dump_heap:
 .dump_heap_loop:
     ^ retrieve printi
     ';' printc
-    1 +
+    1+
     jmp .dump_heap_loop
