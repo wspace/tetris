@@ -93,11 +93,11 @@ label_6:
     5
     call rand
     call 4x_jn
-    jn label_9
+    jn game_over
 
     call 4x_store_n1
 read_key:
-    call cursor_21_24
+    call cursor_bottom_right
     361 readc
     call clear_piece
     2dup
@@ -121,7 +121,7 @@ read_key:
     jmp label_20
 .read_esc:
     2drop
-    jmp label_9
+    jmp game_over
 
 label_20:
     call 4x_jn
@@ -152,12 +152,14 @@ label_23:
     2drop
     call label_24
     jmp label_6
-label_9:
+
+game_over:
     call 4x_store_n1
     2drop
-    call cursor_21_24
+    call cursor_bottom_right
     call color_reverse
-    " \n\e[G" prints
+    " \n" prints  # Fill empty bottom-right corner
+    "\e[G" prints # Move cursor to start of line
     call color_reset
     end
 
@@ -182,7 +184,7 @@ label_24:
     ^ 11% jz .break_inner
     jmp .inner_begin
 .break_inner:
-    ^ 11/ 10- call label_31
+    ^ 11/ 10- call remove_filled_row
     ^ call .loop1
     11+
     jmp .outer_begin
@@ -268,22 +270,23 @@ label_40:
     ';' printc
     11% 2* 1+ printi
     'H' printc
-    # ?
-    "\e[2X  " prints
+    "\e[2X" prints # Erase next 2 characters without moving cursor
+    "  " prints
     ret
 
+# Remove a filled row and shift the board down
 # (line -- )
-label_31:
+remove_filled_row:
     call color_reset
     "\e[" prints printi 'H' printc # Move cursor to line
-    "\e[1M" prints
-    jmp draw_board_row
+    "\e[1M" prints # Delete current line and shift remaining lines up
+    jmp draw_board_row # Add empty row at top
 
 # Draw an empty board
 # ( -- )
 draw_board_init:
     "\e[2J" prints # Clear entire screen
-    # Draw floor (leave the bottom-right corner empty for player input)
+    # Draw floor except for bottom-right corner
     "\e[H" prints # Move cursor to upper-left corner
     call color_reverse
     23 call print_spaces
@@ -306,10 +309,10 @@ draw_board_row:
     "\e[23G  " prints # Draw right wall at column 23
     ret
 
-# Move cursor to line 21, col 24
+# Move cursor to the bottom-right corner, where user input is read
 # ( -- )
-cursor_21_24:
-    "\e[21;24H" prints
+cursor_bottom_right:
+    "\e[21;24H" prints # Move cursor to line 21, col 24
     jmp color_reset
 
 # Reverse video on
