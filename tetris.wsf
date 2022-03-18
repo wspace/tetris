@@ -87,7 +87,7 @@ init_board:
     ^ -2 store
     ^ 352 j< .init_board_bottom
     drop
-    call clear
+    call draw_board_init
 
 label_6:
     5
@@ -156,9 +156,9 @@ label_9:
     call 4x_store_n1
     2drop
     call cursor_21_24
-    call reverse
+    call color_reverse
     " \n\e[G" prints
-    call reset
+    call color_reset
     end
 
 # Return a pseudorandom number in {6, 12, 18, 24, 32, 36}
@@ -272,51 +272,49 @@ label_40:
     "\e[2X  " prints
     ret
 
-# (l -- )
+# (line -- )
 label_31:
-    call reset
-    # Move cursor to line l
-    "\e[" prints
-    printi
-    "H\e[1M" prints
-    jmp label_41
+    call color_reset
+    "\e[" prints printi 'H' printc # Move cursor to line
+    "\e[1M" prints
+    jmp draw_board_row
 
+# Draw an empty board
 # ( -- )
-clear:
-    # Clear entire screen
-    "\e[2J" prints
-    # Move cursor to upper left corner
-    "\e[H" prints
-    call reverse
+draw_board_init:
+    "\e[2J" prints # Clear entire screen
+    # Draw floor (leave the bottom-right corner empty for player input)
+    "\e[H" prints # Move cursor to upper-left corner
+    call color_reverse
     23 call print_spaces
+    # Draw 20 rows of walls
     -20
-label_43:
-    call label_41
+.draw_board_init_loop:
+    call draw_board_row
     1+
-    ^ jn label_43
+    ^ jn .draw_board_init_loop
     drop ret
 
+# Insert a line at the top of the board and draw walls
 # ( -- )
-label_41:
-    call reset
-    # Move cursor to upper left corner
-    "\e[H" prints
-    # ?
-    "\e[L" prints
-    call reverse
-    # Move cursor to column 23
-    "  \e[23G  " prints
+draw_board_row:
+    call color_reset
+    "\e[H" prints # Move cursor to upper-left corner
+    "\e[L" prints # Insert line at cursor position
+    call color_reverse
+    "  " prints       # Draw left wall
+    "\e[23G  " prints # Draw right wall at column 23
     ret
 
 # Move cursor to line 21, col 24
 # ( -- )
 cursor_21_24:
     "\e[21;24H" prints
-    jmp reset
+    jmp color_reset
 
 # Reverse video on
 # ( -- )
-reverse:
+color_reverse:
     "\e[0;7m" prints
     ret
 
@@ -338,18 +336,18 @@ background:
 
 # Reset all attributes
 # ( -- )
-reset:
+color_reset:
     "\e[0m" prints
     ret
 
 # Print n spaces
 # (n -- )
 print_spaces:
-    ^ jz .print_spaces_done
+    ^ jz .print_spaces_ret
     ' ' printc
     1-
     jmp print_spaces
-.print_spaces_done:
+.print_spaces_ret:
     drop ret
 
 # Print "Crash!" and dump the stack
