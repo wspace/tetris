@@ -1,4 +1,4 @@
-// Copyright 2020 Andrew Archibald. Licensed under the MIT License.
+// Copyright 2020-2022 Andrew Archibald. Licensed under the MIT License.
 
 // Command tetrisrun is a driver for Peter De Wachter's Whitespace
 // Tetris game. It introduces gravity and provides several key mappings.
@@ -122,6 +122,8 @@ func readKey() (byte, error) {
 			return 'k', nil
 		case 'l', 'd': // right
 			return 'l', nil
+		case 'e', 'o':
+			return b, nil
 		case 'q', '\x00', '\x03', '\x04', '\x1a': // q, ^@, ^C, ^D, ^Z
 			return 0, io.EOF
 		case 'p', ' ':
