@@ -3,11 +3,11 @@
 
 # Heap usage:
 #   0-113   piece rotations
+#   114     rand
+#   115     read char
+#   116     tmp
+#   117     tmp
 #   121-352 board
-#   360     rand
-#   361     read char
-#   362     tmp
-#   363     tmp
 
 # A piece rotation is encoded as a 6-tuple containing the color ID (1-7),
 # offsets for the four blocks, and the index of the next rotation for that
@@ -95,7 +95,7 @@
     drop
 
     # Initial seed
-    360 123456 store
+    114 123456 store
 
 # Initial board:
 #
@@ -128,18 +128,14 @@
 
     # Initialize the board at addresses 121-352
     121
-.init_board:
-    ^ -2 store # Wall
-    ^ 341 j= .init_board__floor
-.init_board__field:
-    1+
-    ^ 0 store # Field
-    ^ 11% jz .init_board
-    jmp .init_board__field
+.init_board__walls:
+    ^ -2 store
+    11+
+    ^ 341 j< .init_board__walls
 .init_board__floor:
+    ^ -2 store
     1+
-    ^ -2 store # Floor
-    ^ 352 j< .init_board__floor
+    ^ 353 j< .init_board__floor
     drop
 
     call draw_empty_board
@@ -155,29 +151,31 @@
 # (pos piece -- !)
 .game_loop__read_key:
     call move_cursor_bottom_right
-    361 readc
+    115 readc
     call erase_piece
     2dup
-    361 retrieve 'j'  j= .game_loop__key_left
-    361 retrieve 'k'  j= .game_loop__key_down
-    361 retrieve 'l'  j= .game_loop__key_right
-    361 retrieve 'i'  j= .game_loop__key_rotate
-    361 retrieve '\e' j= .game_loop__key_quit
+    115 retrieve
+    ^ 'j'  j= .game_loop__key_left
+    ^ 'k'  j= .game_loop__key_down
+    ^ 'l'  j= .game_loop__key_right
+    ^ 'i'  j= .game_loop__key_rotate
+    ^ '\e' j= .game_loop__key_quit
+    drop
     jmp .game_loop__no_move
 .game_loop__key_left:
-    swap 1- swap
+    drop swap 1- swap
     jmp .game_loop__try_move
 .game_loop__key_down:
-    swap 11+ swap
+    drop swap 11+ swap
     jmp .game_loop__move_down
 .game_loop__key_right:
-    swap 1+ swap
+    drop swap 1+ swap
     jmp .game_loop__try_move
 .game_loop__key_rotate:
-    5+ retrieve 6*
+    drop 5+ retrieve 6*
     jmp .game_loop__try_move
 .game_loop__key_quit:
-    2drop
+    3drop
     jmp game_over
 
 # Moves the piece left, right, or rotates it.
@@ -196,11 +194,11 @@
 # (pos piece pos' piece' -- ! pos' piece')
 .game_loop__move:
     # Discard old position using heap temporaries
-    362 swap store
-    363 swap store
+    116 swap store
+    117 swap store
     2drop
-    363 retrieve
-    362 retrieve
+    117 retrieve
+    116 retrieve
     call draw_piece
     jmp .game_loop__read_key
 
@@ -236,9 +234,9 @@ game_over:
 # ( -- piece)
 rand_piece:
     # Update the rand state to (rand*279470273)%4294967291
-    360 retrieve
-    279470273* 4294967291%
-    ^ 360 swap store
+    114
+    ^ retrieve 279470273* 4294967291%
+    swap ^1 store
     # Return (rand%7)*6
     7% 6* ret
 
@@ -276,7 +274,7 @@ shift_board_lines:
 .shift_board_lines__clear_top:
     ^ 0 store
     1+
-    ^ 11% jz .shift_board_lines__ret
+    ^ 132 j= .shift_board_lines__ret
     jmp .shift_board_lines__clear_top
 .shift_board_lines__ret:
     drop ret
@@ -285,8 +283,7 @@ shift_board_lines:
 # collision and 0 otherwise.
 # (pos piece -- pos piece collided?)
 check_collision:
-    2dup
-    swap 121+ swap
+    ^1 121+ ^1
     1+ ^ retrieve ^2 + retrieve jn .check_collision__collided
     1+ ^ retrieve ^2 + retrieve jn .check_collision__collided
     1+ ^ retrieve ^2 + retrieve jn .check_collision__collided
@@ -299,27 +296,23 @@ check_collision:
 # (pos piece -- pos piece)
 draw_piece:
     call draw_piece_screen
-    swap 121+ swap
+    ^1 121+ ^1
     1+ ^ retrieve ^2 + -1 store
     1+ ^ retrieve ^2 + -1 store
     1+ ^ retrieve ^2 + -1 store
     1+ ^ retrieve ^2 + -1 store
-    4-
-    swap 121- swap
-    ret
+    2drop ret
 
 # Erases the piece on the screen and in the heap (sets blocks to 0).
 # (pos piece -- pos piece)
 erase_piece:
     call erase_piece_screen
-    swap 121+ swap
+    ^1 121+ ^1
     1+ ^ retrieve ^2 + 0 store
     1+ ^ retrieve ^2 + 0 store
     1+ ^ retrieve ^2 + 0 store
     1+ ^ retrieve ^2 + 0 store
-    4-
-    swap 121 - swap
-    ret
+    2drop ret
 
 # Draws the piece on the screen.
 # (pos piece -- pos piece)
