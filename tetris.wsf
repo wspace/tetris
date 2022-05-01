@@ -1,8 +1,8 @@
 # Copyright 2008 Peter De Wachter
 # Copyright 2020-2022 Andrew Archibald
 
-# Heap partitions:
-#   0-113
+# Heap usage:
+#   0-113   piece rotations
 #   121-352 board
 #   360     rand
 #   361     read char
@@ -65,7 +65,6 @@
 #   22 23 24 25
 #   33 34 35 36
 
-# Store piece data at addresses 0-113
     1  0  1  11 12 0  # O 0
     2  11 12 13 14 7  # I 1
     3  0  1  2  13 8  # J 2
@@ -86,14 +85,15 @@
     6  1  11 12 22 5  # Z 17
     7  0  11 12 23 6  # S 18
 
-    113 # Loop counter
-init_heap_loop:
+    # Store piece rotations at addresses 0-113
+    113
+.init_pieces:
     swap ^1 swap
     store
     1-
-    ^ jn .init_heap_done
-    jmp init_heap_loop
-.init_heap_done:
+    ^ jn .init_pieces__break
+    jmp .init_pieces
+.init_pieces__break:
     drop
 
     # Initial seed
@@ -128,103 +128,116 @@ init_heap_loop:
 #   block: -1
 #   wall:  -2
 
-# Initialize board at addresses 121-352
-    121 # Loop counter
-init_board:
-    # Edge
-    ^ -2 store
-    ^ 341 j= .init_board_bottom
-.init_board_fill:
+    # Initialize the board at addresses 121-352
+    121
+.init_board:
+    ^ -2 store # Wall
+    ^ 341 j= .init_board__floor
+.init_board__field:
     1+
-    # Center
-    ^ 0 store
-    ^ 11% jz init_board
-    jmp .init_board_fill
-.init_board_bottom:
+    ^ 0 store # Field
+    ^ 11% jz .init_board
+    jmp .init_board__field
+.init_board__floor:
     1+
-    # Bottom
-    ^ -2 store
-    ^ 352 j< .init_board_bottom
+    ^ -2 store # Floor
+    ^ 352 j< .init_board__floor
     drop
-    call draw_board_init
 
-label_6:
-    5 # Block position
-    call rand
-    call 4x_jn
-    jn game_over
+    call draw_empty_board
 
-    call 4x_store_n1
-read_key:
-    call cursor_bottom_right
+# Spawns the next piece at the top of the board.
+# ( -- !)
+.game_loop__spawn_piece:
+    5 # Piece position
+    call rand_piece
+    call check_collision jn game_over
+    call draw_piece
+# Reads a key press from the user.
+# (pos piece -- !)
+.game_loop__read_key:
+    call move_cursor_bottom_right
     361 readc
-    call clear_piece
+    call erase_piece
     2dup
-    361 retrieve 'j'  j= .read_j
-    361 retrieve 'k'  j= .read_k
-    361 retrieve 'l'  j= .read_l
-    361 retrieve 'i'  j= .read_i
-    361 retrieve '\e' j= .read_esc
-    jmp label_19
-.read_j: # Move left
+    361 retrieve 'j'  j= .game_loop__key_left
+    361 retrieve 'k'  j= .game_loop__key_down
+    361 retrieve 'l'  j= .game_loop__key_right
+    361 retrieve 'i'  j= .game_loop__key_rotate
+    361 retrieve '\e' j= .game_loop__key_quit
+    jmp .game_loop__no_move
+.game_loop__key_left:
     swap 1- swap
-    jmp label_20
-.read_k: # Move down
+    jmp .game_loop__try_move
+.game_loop__key_down:
     swap 11+ swap
-    jmp label_21
-.read_l: # Move right
+    jmp .game_loop__move_down
+.game_loop__key_right:
     swap 1+ swap
-    jmp label_20
-.read_i: # Rotate
+    jmp .game_loop__try_move
+.game_loop__key_rotate:
     5+ retrieve 6*
-    jmp label_20
-.read_esc:
+    jmp .game_loop__try_move
+.game_loop__key_quit:
     2drop
     jmp game_over
 
-label_20:
-    call 4x_jn
-    jn label_19
-    jmp label_22
+# Moves the piece left, right, or rotates it.
+# (pos piece pos' piece' -- ! pos'' piece'')
+.game_loop__try_move:
+    call check_collision jn .game_loop__no_move
+    jmp .game_loop__move
 
-label_21:
-    call 4x_jn
-    jn label_23
-    jmp label_22
+# Moves the piece down or places it.
+# (pos piece pos' piece' -- ! pos'' piece'')
+.game_loop__move_down:
+    call check_collision jn .game_loop__place_piece
+    jmp .game_loop__move
 
-label_22:
-    call 4x_store_n1
+# Moves the piece.
+# (pos piece pos' piece' -- ! pos' piece')
+.game_loop__move:
+    call draw_piece # Unnecessary draw
+    # Discard old position using heap temporaries
     362 swap store
     363 swap store
     2drop
     363 retrieve
     362 retrieve
-    call 4x_store_n1
-    jmp read_key
-label_19:
-    2drop
-    call 4x_store_n1
-    jmp read_key
-label_23:
-    2drop
-    call 4x_store_n1
-    2drop
-    call label_24
-    jmp label_6
+    call draw_piece
+    jmp .game_loop__read_key
 
-game_over:
-    call 4x_store_n1
+# Redraws the unmoved piece.
+# (pos piece pos' piece' -- ! pos piece)
+.game_loop__no_move:
     2drop
-    call cursor_bottom_right
-    call color_reverse
+    call draw_piece
+    jmp .game_loop__read_key
+
+# Places the piece, then spawns the next.
+# (pos piece pos' piece' -- !)
+.game_loop__place_piece:
+    2drop
+    call draw_piece
+    2drop
+    call remove_filled_lines
+    jmp .game_loop__spawn_piece
+
+# Quits the game and cleans up the bottom right corner of the board.
+# (pos piece -- !)
+game_over:
+    call draw_piece
+    2drop
+    call move_cursor_bottom_right
+    call reverse_color
     " \n" prints  # Fill empty bottom-right corner
     "\e[G" prints # Move cursor to start of line
-    call color_reset
+    call reset_color
     end
 
-# Return a pseudorandom number in {6, 12, 18, 24, 32, 36}
-# ( -- rand)
-rand:
+# Returns the next piece and updates the pseudorandom state.
+# ( -- piece)
+rand_piece:
     # Update the rand state to (rand*279470273)%4294967291
     360 retrieve
     279470273* 4294967291%
@@ -232,54 +245,63 @@ rand:
     # Return (rand%7)*6
     7% 6* ret
 
-label_24:
+# Removes any filled lines.
+# ( -- )
+remove_filled_lines:
     341
-.outer_begin:
+    # Iterate lines, starting at the bottom
+.remove_filled_lines__loop_line:
     11/ 11* 1-
-    ^ 122 j< .ret
-.inner_begin:
-    ^ retrieve jz .outer_begin
+    ^ 122 j< .remove_filled_lines__ret
+    # Iterate columns, starting at the right
+.remove_filled_lines__loop_col:
+    ^ retrieve jz .remove_filled_lines__loop_line
     1-
-    ^ 11% jz .break_inner
-    jmp .inner_begin
-.break_inner:
-    ^ 11/ 10- call remove_filled_row
-    ^ call .loop1
+    ^ 11% jz .remove_filled_lines__remove_line
+    jmp .remove_filled_lines__loop_col
+.remove_filled_lines__remove_line:
+    ^ 11/ 10- call remove_line
+    ^ call shift_board_lines
     11+
-    jmp .outer_begin
-.ret:
+    jmp .remove_filled_lines__loop_line
+.remove_filled_lines__ret:
     drop ret
 
-# (n -- )
-.loop1:
+# Shifts lines above pos in heap down by one.
+# (pos -- )
+shift_board_lines:
     ^ ^ retrieve
     swap 11+ swap store
-    ^ 122 j= .loop2
+    ^ 122 j= .shift_board_lines__clear_top
     1-
-    jmp .loop1
-# (122 -- )
-.loop2:
+    jmp shift_board_lines
+    # Set top line to 0
+.shift_board_lines__clear_top:
     ^ 0 store
     1+
-    ^ 11% jz .label_34
-    jmp .loop2
-.label_34:
+    ^ 11% jz .shift_board_lines__ret
+    jmp .shift_board_lines__clear_top
+.shift_board_lines__ret:
     drop ret
 
-# (x y -- x y n)
-4x_jn:
+# Checks whether the piece collides with other blocks or a wall. Returns -1 on
+# collision and 0 otherwise.
+# (pos piece -- pos piece collided?)
+check_collision:
     2dup
     swap 121+ swap
-    1+ ^ retrieve ^2 + retrieve jn .neg
-    1+ ^ retrieve ^2 + retrieve jn .neg
-    1+ ^ retrieve ^2 + retrieve jn .neg
-    1+ ^ retrieve ^2 + retrieve jn .neg
+    1+ ^ retrieve ^2 + retrieve jn .check_collision__collided
+    1+ ^ retrieve ^2 + retrieve jn .check_collision__collided
+    1+ ^ retrieve ^2 + retrieve jn .check_collision__collided
+    1+ ^ retrieve ^2 + retrieve jn .check_collision__collided
     2drop 0 ret
-.neg:
+.check_collision__collided:
     2drop -1 ret
 
-4x_store_n1:
-    call draw_piece
+# Draws the piece on the screen and in the heap (sets blocks to -1).
+# (pos piece -- pos piece)
+draw_piece:
+    call draw_piece_screen
     swap 121+ swap
     1+ ^ retrieve ^2 + -1 store
     1+ ^ retrieve ^2 + -1 store
@@ -289,9 +311,10 @@ label_24:
     swap 121- swap
     ret
 
-# Clear piece in the heap and visually
-clear_piece:
-    call erase_piece
+# Erases the piece on the screen and in the heap (sets blocks to 0).
+# (pos piece -- pos piece)
+erase_piece:
+    call erase_piece_screen
     swap 121+ swap
     1+ ^ retrieve ^2 + 0 store
     1+ ^ retrieve ^2 + 0 store
@@ -301,27 +324,28 @@ clear_piece:
     swap 121 - swap
     ret
 
-# Draw the piece with the color at the address c
-# (x y c -- x y)
-draw_piece:
-    ^ retrieve call background
-    jmp .draw_piece
+# Draws the piece on the screen.
+# (pos piece -- pos piece)
+draw_piece_screen:
+    ^ retrieve call set_background
+    jmp .draw_piece_screen
 
-# Erase the piece visually
-# (x y -- x y)
-erase_piece:
-    0 call background # black
+# Erases the piece on the screen.
+# (pos piece -- pos piece)
+erase_piece_screen:
+    0 call set_background # black
 
-.draw_piece:
-    1+ ^ retrieve ^2 + call label_40
-    1+ ^ retrieve ^2 + call label_40
-    1+ ^ retrieve ^2 + call label_40
-    1+ ^ retrieve ^2 + call label_40
+.draw_piece_screen:
+    1+ ^ retrieve ^2 + call draw_block_screen
+    1+ ^ retrieve ^2 + call draw_block_screen
+    1+ ^ retrieve ^2 + call draw_block_screen
+    1+ ^ retrieve ^2 + call draw_block_screen
     4-
     ret
 
-# (n -- )
-label_40:
+# Draws a block at the given position on the screen.
+# (pos -- )
+draw_block_screen:
     ^
     # Move cursor to line (n/11+1), col ((n%11)*2+1)
     "\e[" prints
@@ -333,54 +357,54 @@ label_40:
     "  " prints
     ret
 
-# Remove a filled row and shift the board down
+# Removes a filled line and shifts the above lines down.
 # (line -- )
-remove_filled_row:
-    call color_reset
+remove_line:
+    call reset_color
     "\e[" prints printi 'H' printc # Move cursor to line
     "\e[1M" prints # Delete current line and shift remaining lines up
-    jmp draw_board_row # Add empty row at top
+    jmp draw_board_line # Add empty line at top
 
-# Draw an empty board
+# Draws an empty board.
 # ( -- )
-draw_board_init:
+draw_empty_board:
     "\e[2J" prints # Clear entire screen
     # Draw floor except for bottom-right corner
     "\e[H" prints # Move cursor to upper-left corner
-    call color_reverse
+    call reverse_color
     23 call print_spaces
-    # Draw 20 rows of walls
+    # Draw 20 lines of walls
     -20
-.draw_board_init_loop:
-    call draw_board_row
+.draw_empty_board__loop:
+    call draw_board_line
     1+
-    ^ jn .draw_board_init_loop
+    ^ jn .draw_empty_board__loop
     drop ret
 
-# Insert a line at the top of the board and draw walls
+# Inserts a line and walls at the top of the board.
 # ( -- )
-draw_board_row:
-    call color_reset
+draw_board_line:
+    call reset_color
     "\e[H" prints # Move cursor to upper-left corner
-    "\e[L" prints # Insert line at cursor position
-    call color_reverse
+    "\e[L" prints # Insert line at cursor
+    call reverse_color
     "  " prints       # Draw left wall
     "\e[23G  " prints # Draw right wall at column 23
     ret
 
-# Move cursor to the bottom-right corner, where user input is read
+# Moves cursor to the bottom-right corner, where user input is read.
 # ( -- )
-cursor_bottom_right:
+move_cursor_bottom_right:
     "\e[21;24H" prints # Move cursor to line 21, col 24
-    jmp color_reset
+    jmp reset_color
 
-# Reverse video on
+# Sets reverse video on.
 # ( -- )
-color_reverse:
+reverse_color:
     "\e[0;7m" prints
     ret
 
-# Reset attributes and set background color, given 0-7
+# Resets attributes and sets the background color, given 0-7.
 #   40 black
 #   41 red
 #   42 green
@@ -390,39 +414,39 @@ color_reverse:
 #   46 cyan
 #   47 white
 # (color -- )
-background:
+set_background:
     "\e[0;4" prints
     printi
     'm' printc
     ret
 
-# Reset all attributes
+# Resets all terminal attributes.
 # ( -- )
-color_reset:
+reset_color:
     "\e[0m" prints
     ret
 
-# Print n spaces
+# Prints n spaces.
 # (n -- )
 print_spaces:
-    ^ jz .print_spaces_ret
+    ^ jz .print_spaces__ret
     ' ' printc
     1-
     jmp print_spaces
-.print_spaces_ret:
+.print_spaces__ret:
     drop ret
 
-# Print "Crash!" and dump the stack
-# ( -- )
+# Prints "Crash!" and dumps the stack until it underflows.
+# (s... -- !)
 dump_stack:
     "\nCrash!\n" prints
-.dump_stack_loop:
+.dump_stack__loop:
     printi
     '\n' printc
-    jmp .dump_stack_loop
+    jmp .dump_stack__loop
 
-# Dump heap values above 121
-# ( -- )
+# Dumps heap values above 121, infinitely.
+# ( -- !)
 dump_heap:
     121
 .dump_heap_loop:
@@ -432,55 +456,46 @@ dump_heap:
     jmp .dump_heap_loop
 
 # Prints the board state below the board.
+# ( -- )
 debug_dump_board:
     "\e[22H" prints # Move cursor to line 22
-    call color_reset
+    call reset_color
     "\e[0J" prints # Clear from cursor to screen end
     121
-.debug_dump_board_loop:
-    ^ 11% jz .debug_dump_board_line_number
-.debug_dump_board_cell:
+.debug_dump_board__loop:
+    ^ 11% jz .debug_dump_board__line_number
+.debug_dump_board__cell:
     ' ' printc
     ^ retrieve printi
     1+
-    ^ 353 j< .debug_dump_board_loop
+    ^ 353 j< .debug_dump_board__loop
     '\n' printc
     drop
-    call debug_dump_stack
-    ret
-.debug_dump_board_line_number:
+    jmp debug_dump_stack
+.debug_dump_board__line_number:
     '\n' printc
     ^ printi
     ':' printc
-    jmp .debug_dump_board_cell
+    jmp .debug_dump_board__cell
 
-# Prints the values on the stack nondestructively.
-# Requires that -999999999 be at the bottom of the stack.
-# Can only print up to 20 stack elements.
+# Prints the values on the stack nondestructively. Requires that the sentinel
+# -999999999 be under the stack region to print. Limited to up to 10 elements.
+# (-999999999 s... -- -999999999 s...)
 debug_dump_stack:
     "\e[46H" prints # Move cursor to line 36
-    call color_reset
+    call reset_color
     "\e[0J" prints # Clear from cursor to screen end
-    ^   ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^1  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^2  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^3  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^4  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^5  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^6  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^7  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^8  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^9  ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^10 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^11 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^12 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^13 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^14 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^15 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^16 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^17 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^18 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    ^19 ^ -999999999 j= .debug_dump_stack_ret printi '\n' printc
-    "Too many elements to print\n" prints
-.debug_dump_stack_ret:
+    ^   ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^1  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^2  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^3  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^4  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^5  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^6  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^7  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^8  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^9  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^10 ^ -999999999 j= .debug_dump_stack__ret
+    "[truncated]\n" prints
+.debug_dump_stack__ret:
     drop ret
