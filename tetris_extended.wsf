@@ -323,7 +323,7 @@ draw_piece_screen:
 # Erases the piece on the screen.
 # (pos piece -- pos piece)
 erase_piece_screen:
-    0 call set_background # black
+    9 call set_background # default
 
 .draw_piece_screen:
     1+ ^ retrieve ^2 + call draw_block_screen
