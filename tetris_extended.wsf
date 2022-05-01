@@ -454,3 +454,48 @@ dump_heap:
     ';' printc
     1+
     jmp .dump_heap_loop
+
+# Prints the board state below the board.
+# ( -- )
+debug_dump_board:
+    "\e[22H" prints # Move cursor to line 22
+    call reset_color
+    "\e[0J" prints # Clear from cursor to screen end
+    121
+.debug_dump_board__loop:
+    ^ 11% jz .debug_dump_board__line_number
+.debug_dump_board__cell:
+    ' ' printc
+    ^ retrieve printi
+    1+
+    ^ 353 j< .debug_dump_board__loop
+    '\n' printc
+    drop
+    jmp debug_dump_stack
+.debug_dump_board__line_number:
+    '\n' printc
+    ^ printi
+    ':' printc
+    jmp .debug_dump_board__cell
+
+# Prints the values on the stack nondestructively. Requires that the sentinel
+# -999999999 be under the stack region to print. Limited to up to 10 elements.
+# (-999999999 s... -- -999999999 s...)
+debug_dump_stack:
+    "\e[46H" prints # Move cursor to line 36
+    call reset_color
+    "\e[0J" prints # Clear from cursor to screen end
+    ^   ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^1  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^2  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^3  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^4  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^5  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^6  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^7  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^8  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^9  ^ -999999999 j= .debug_dump_stack__ret printi '\n' printc
+    ^10 ^ -999999999 j= .debug_dump_stack__ret
+    "[truncated]\n" prints
+.debug_dump_stack__ret:
+    drop ret
