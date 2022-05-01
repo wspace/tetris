@@ -145,23 +145,31 @@
 .game_loop__spawn_piece:
     5 # Piece position
     call rand_piece
-    call check_collision jn game_over
     call draw_piece
+    call check_collision jn game_over
 # Reads a key press from the user.
 # (pos piece -- !)
 .game_loop__read_key:
     call move_cursor_bottom_right
-    115 readc
-    call erase_piece
     2dup
-    115 retrieve
+    115 ^ readc retrieve
+    ^ 'w'  j= .game_loop__key_rotate
+    ^ 'a'  j= .game_loop__key_left
+    ^ 's'  j= .game_loop__key_down
+    ^ 'd'  j= .game_loop__key_right
+    ^ 'q'  j= .game_loop__key_quit
+    ^ 'i'  j= .game_loop__key_rotate
     ^ 'j'  j= .game_loop__key_left
     ^ 'k'  j= .game_loop__key_down
     ^ 'l'  j= .game_loop__key_right
-    ^ 'i'  j= .game_loop__key_rotate
     ^ '\e' j= .game_loop__key_quit
     drop
-    jmp .game_loop__no_move
+.game_loop__no_move:
+    2drop
+    jmp .game_loop__read_key
+.game_loop__key_rotate:
+    drop 5+ retrieve 6*
+    jmp .game_loop__try_move
 .game_loop__key_left:
     drop swap 1- swap
     jmp .game_loop__try_move
@@ -170,9 +178,6 @@
     jmp .game_loop__move_down
 .game_loop__key_right:
     drop swap 1+ swap
-    jmp .game_loop__try_move
-.game_loop__key_rotate:
-    drop 5+ retrieve 6*
     jmp .game_loop__try_move
 .game_loop__key_quit:
     3drop
@@ -196,16 +201,10 @@
     # Discard old position using heap temporaries
     116 swap store
     117 swap store
+    call erase_piece
     2drop
     117 retrieve
     116 retrieve
-    call draw_piece
-    jmp .game_loop__read_key
-
-# Redraws the unmoved piece.
-# (pos piece pos' piece' -- ! pos piece)
-.game_loop__no_move:
-    2drop
     call draw_piece
     jmp .game_loop__read_key
 
@@ -213,7 +212,7 @@
 # (pos piece pos' piece' -- !)
 .game_loop__place_piece:
     2drop
-    call draw_piece
+    call place_piece
     2drop
     call remove_filled_lines
     jmp .game_loop__spawn_piece
@@ -221,7 +220,6 @@
 # Quits the game and cleans up the bottom right corner of the board.
 # (pos piece -- !)
 game_over:
-    call draw_piece
     2drop
     call move_cursor_bottom_right
     call reverse_color
@@ -292,50 +290,39 @@ check_collision:
 .check_collision__collided:
     2drop -1 ret
 
-# Draws the piece on the screen and in the heap (sets blocks to -1).
+# Draws the piece and places it on the board (sets blocks to -1).
+# (pos piece -- pos piece)
+place_piece:
+    call draw_piece
+    ^1 121+ ^1
+    1+ ^ retrieve ^2 + -1 store
+    1+ ^ retrieve ^2 + -1 store
+    1+ ^ retrieve ^2 + -1 store
+    1+ ^ retrieve ^2 + -1 store
+    2drop ret
+
+# Draws the piece.
 # (pos piece -- pos piece)
 draw_piece:
-    call draw_piece_screen
-    ^1 121+ ^1
-    1+ ^ retrieve ^2 + -1 store
-    1+ ^ retrieve ^2 + -1 store
-    1+ ^ retrieve ^2 + -1 store
-    1+ ^ retrieve ^2 + -1 store
-    2drop ret
+    ^ retrieve call set_background
+    jmp .draw_piece
 
-# Erases the piece on the screen and in the heap (sets blocks to 0).
+# Erases the piece.
 # (pos piece -- pos piece)
 erase_piece:
-    call erase_piece_screen
-    ^1 121+ ^1
-    1+ ^ retrieve ^2 + 0 store
-    1+ ^ retrieve ^2 + 0 store
-    1+ ^ retrieve ^2 + 0 store
-    1+ ^ retrieve ^2 + 0 store
-    2drop ret
-
-# Draws the piece on the screen.
-# (pos piece -- pos piece)
-draw_piece_screen:
-    ^ retrieve call set_background
-    jmp .draw_piece_screen
-
-# Erases the piece on the screen.
-# (pos piece -- pos piece)
-erase_piece_screen:
     9 call set_background # default
 
-.draw_piece_screen:
-    1+ ^ retrieve ^2 + call draw_block_screen
-    1+ ^ retrieve ^2 + call draw_block_screen
-    1+ ^ retrieve ^2 + call draw_block_screen
-    1+ ^ retrieve ^2 + call draw_block_screen
+.draw_piece:
+    1+ ^ retrieve ^2 + call draw_block
+    1+ ^ retrieve ^2 + call draw_block
+    1+ ^ retrieve ^2 + call draw_block
+    1+ ^ retrieve ^2 + call draw_block
     4-
     ret
 
-# Draws a block at the given position on the screen.
+# Draws a block at the given position.
 # (pos -- )
-draw_block_screen:
+draw_block:
     ^
     # Move cursor to line (n/11+1), col ((n%11)*2+1)
     "\e[" prints
