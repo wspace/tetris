@@ -28,6 +28,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -48,6 +49,16 @@ var (
 func main() {
 	signal.Ignore(syscall.SIGPIPE)
 	dropRate := initialDropRate
+
+	// Specify color support
+	colorSupport := "16\n"
+	if colorterm := os.Getenv("COLORTERM"); colorterm == "truecolor" || colorterm == "24bit" {
+		colorSupport = "24\n"
+	}
+	writeString(colorSupport)
+
+	// Use timestamp as initial seed
+	writeString(strconv.FormatInt(time.Now().Unix(), 10) + "\n")
 
 	// Forward key presses to stdout
 	go func() {
@@ -93,6 +104,15 @@ Drop:
 
 func writeByte(b byte) bool {
 	_, err := os.Stdout.Write([]byte{b})
+	return checkWriteError(err)
+}
+
+func writeString(s string) bool {
+	_, err := os.Stdout.WriteString(s)
+	return checkWriteError(err)
+}
+
+func checkWriteError(err error) bool {
 	if err != nil {
 		// Suppress SIGPIPE
 		if pe, ok := err.(*os.PathError); !ok || pe.Err != syscall.EPIPE {

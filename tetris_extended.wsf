@@ -4,10 +4,12 @@
 # Heap usage:
 #   0-111   piece rotations
 #   112-139 colors
-#   140     rand
-#   141     read char / tmp
-#   142     tmp
+#   140     color depth
+#   141     rand
+#   142     read char
 #   143-374 board
+#   375     tmp
+#   376     tmp
 
 # Piece rotations are encoded as four directions, each with the offsets for the
 # four blocks.
@@ -87,11 +89,8 @@
     105 190 40  42 # S #69BE28 green      42 green
     237 41  57  41 # Z #ED2939 red        41 red
 
-    # Initial seed
-    123456
-
-    # Store piece rotations, colors, and seed at addresses 0-140
-    140
+    # Store piece rotations and colors seed at addresses 0-139
+    139
 .init_pieces:
     swap ^1 swap
     store
@@ -142,6 +141,24 @@
     ^ 375 j< .init_board__floor
     drop
 
+    # Read the supported color depth
+    140 readi
+
+    # Read the random seed
+    141
+    ^ readi
+    ^ retrieve
+    ^ jz .init_seed__zero
+    ^ jn .init_seed__neg
+    2drop
+    jmp .init_seed__done
+.init_seed__zero:
+    drop 123456 store
+    jmp .init_seed__done
+.init_seed__neg:
+    neg store
+.init_seed__done:
+
     call draw_empty_board
 
 # Spawns the next piece at the top of the board.
@@ -157,7 +174,7 @@
 .game_loop__read_key:
     call move_cursor_bottom_right
     2dup
-    141 ^ readc retrieve
+    142 ^ readc retrieve
     ^ 'w'  j= .game_loop__rotate
     ^ 'a'  j= .game_loop__move_left
     ^ 's'  j= .game_loop__move_down
@@ -206,13 +223,13 @@
 # (pos piece pos' piece' -- ! pos' piece')
 .game_loop__move:
     # Discard old position using heap temporaries
-    141 swap store
-    142 swap store
+    375 swap store
+    376 swap store
     call erase_piece
     call erase_ghost_piece
     2drop
-    142 retrieve
-    141 retrieve
+    376 retrieve
+    375 retrieve
     call draw_ghost_piece
     call draw_piece
     jmp .game_loop__read_key
@@ -238,7 +255,7 @@ game_over:
 # ( -- piece)
 rand_piece:
     # Update the rand state to (rand*279470273)%4294967291
-    140
+    141
     ^ retrieve 279470273* 4294967291%
     swap ^1 store
     # Return rand%7
@@ -323,7 +340,7 @@ draw_piece:
 # Draws the piece with the given RGB color.
 # (pos piece r g b fallback -- pos piece)
 draw_piece_colored:
-    call set_rgb_color
+    call set_color
 .draw_piece:
     ^  ^ retrieve ^3 + call draw_block
     1+ ^ retrieve ^3 + call draw_block
@@ -406,11 +423,16 @@ move_cursor_bottom_right:
     "\e[21;24H" prints # Move cursor to line 21, col 24
     jmp reset_color
 
-# Sets background to RGB color or to fallback named color and resets attributes.
+# Sets background to a 24-bit RGB color or to a fallback named color and resets
+# attributes.
 # (r g b fallback -- )
-set_rgb_color:
-    "\e[" prints
+set_color:
+    140 retrieve 24 j= .set_color_24_bit
+    "\e[0;" prints
     printi 'm' printc # Fallback
+    3drop ret
+.set_color_24_bit:
+    drop
     "\e[0;48;2;" prints
     ^2   printi ';' printc # R
     swap printi ';' printc # G
