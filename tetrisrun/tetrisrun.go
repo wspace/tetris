@@ -28,6 +28,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"syscall"
 	"time"
@@ -54,6 +55,8 @@ func main() {
 	colorSupport := "16\n"
 	if colorterm := os.Getenv("COLORTERM"); colorterm == "truecolor" || colorterm == "24bit" {
 		colorSupport = "24\n"
+	} else if regexp.MustCompile("-256(color)?$").MatchString(os.Getenv("TERM")) {
+		colorSupport = "256\n"
 	}
 	writeString(colorSupport)
 
